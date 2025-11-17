@@ -5,15 +5,12 @@ from datetime import datetime
 import pandas as pd
 import plotly.express as px
 
-# Add workspace to path
-sys.path.insert(0, r'c:\Users\Chris\Desktop\Gemini\test')
-
 import importlib.util
 import os
 
-# Load the 'test v3.py' module (filename has space) dynamically
-module_path = os.path.join(os.path.dirname(__file__), 'test v3.py')
-spec = importlib.util.spec_from_file_location('test_v3_module', module_path)
+# Load the 'Quant_Dashboard.py' module dynamically
+module_path = os.path.join(os.path.dirname(__file__), 'Quant_Dashboard.py')
+spec = importlib.util.spec_from_file_location('quant_dashboard_module', module_path)
 tv = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tv)
 

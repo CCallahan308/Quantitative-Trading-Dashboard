@@ -212,7 +212,7 @@
 │                                                                             │
 │  1️⃣  VERIFY LOCALLY
 │      ✅ python test_syntax.py         # Validates all imports
-│      ✅ python "test v3.py"           # Dashboard loads at 8050
+│      ✅ python Quant_Dashboard.py     # Dashboard loads at 8050
 │      ✅ http://127.0.0.1:8050/        # UI displays correctly
 │
 │  2️⃣  CREATE GITHUB REPO

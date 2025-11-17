@@ -219,8 +219,8 @@ After running experiments:
 
 ### In File System
 ```
-📁 c:\Users\Chris\Desktop\Gemini\test\
-   └── experiments\
+📁 <repository_root>/
+   └── experiments/
        ├── exp_20251116_201413.csv
        ├── exp_20251116_203905.csv
        └── exp_[YYYYMMDD_HHMMSS].csv  ← Each run creates a new file

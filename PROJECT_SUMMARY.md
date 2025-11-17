@@ -113,7 +113,7 @@
 
 ```
 quantitative-trading-dashboard/
-├── test v3.py                  # Main Dash application (793 lines)
+├── Quant_Dashboard.py          # Main Dash application (793 lines)
 ├── run_full_backtest.py        # Headless runner
 ├── test_syntax.py              # Syntax validator
 ├── test.py / test_backtest.py  # Additional tests
@@ -245,7 +245,7 @@ quantitative-trading-dashboard/
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| test v3.py | 866 | Main application |
+| Quant_Dashboard.py | 866 | Main application |
 | style.css | 500+ | Professional UI |
 | README.md | 250+ | Main documentation |
 | SETUP.md | 200+ | Installation guide |
@@ -260,7 +260,7 @@ quantitative-trading-dashboard/
 ### Commands to Run:
 ```bash
 # Start dashboard
-python "test v3.py"
+python Quant_Dashboard.py
 # → Open http://127.0.0.1:8050/
 
 # Run headless backtest

@@ -6,7 +6,7 @@ Complete this before pushing your first commit.
 
 ### Code Review
 - [ ] Run `python test_syntax.py` - All checks pass ✓
-- [ ] Run `python "test v3.py"` - Dashboard loads without errors ✓
+- [ ] Run `python Quant_Dashboard.py` - Dashboard loads without errors ✓
 - [ ] Test all controls work (sliders, inputs, buttons)
 - [ ] Run a backtest - Results display correctly
 - [ ] Test experiment runner - Grid search works

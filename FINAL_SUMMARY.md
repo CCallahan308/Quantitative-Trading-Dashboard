@@ -157,7 +157,7 @@ Plus: **LICENSE** (MIT + disclaimer), **requirements.txt**, **PROJECT_STRUCTURE.
 ### Step 1: Verify Everything Works
 ```bash
 python test_syntax.py          # ✓ All imports valid
-python "test v3.py"           # ✓ Dashboard loads
+python Quant_Dashboard.py           # ✓ Dashboard loads
 # Test: http://127.0.0.1:8050/
 ```
 
@@ -170,7 +170,7 @@ Delete old test files:
 - vbt_app.py
 
 Keep:
-- test v3.py (main)
+- Quant_Dashboard.py (main)
 - run_full_backtest.py
 - test_syntax.py (validator)
 
@@ -245,7 +245,7 @@ with controlled drawdowns through risk management."
 
 ```
 quantitative-trading-dashboard/
-├── test v3.py                    ← Main application
+├── Quant_Dashboard.py            ← Main application
 ├── run_full_backtest.py          ← Headless runner
 ├── test_syntax.py                ← Validator
 ├── assets/style.css              ← Professional UI (500+ lines)

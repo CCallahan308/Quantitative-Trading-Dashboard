@@ -36,103 +36,68 @@ exp_lock = threading.Lock()
 # =============================================================================
 def build_control_panel():
     """Creates the control panel for user inputs."""
-    return html.Div(id='control-panel', style={'width': '340px', 'flexShrink': '0'}, children=[
-        html.H4("⚙️ Strategy Controls"),
+    return html.Div(id='control-panel', style={'width': '300px', 'flexShrink': '0'}, children=[
+        html.H4("Strategy Controls"),
         
-        # Data Input Section
-        html.Div([
-            html.Label("Symbol"),
-            dcc.Input(id='input-symbol', type='text', value='SPY', placeholder='e.g., SPY, QQQ', className='input-field'),
-            
-            html.Label("Date Range"),
-            dcc.DatePickerRange(
-                id='input-date-range',
-                start_date=(datetime.now() - timedelta(days=365*2)).date(),
-                end_date=datetime.now().date(),
-                display_format='YYYY-MM-DD',
-                className='date-picker',
-                start_date_placeholder_text='Start Date',
-                end_date_placeholder_text='End Date',
-                calendar_orientation='vertical',
-                number_of_months_shown=2,
-                with_portal=True
-            ),
-            
-            html.Label("Starting Capital"),
-            dcc.Input(id='input-capital', type='number', value=100000, placeholder='100000', className='input-field'),
-        ]),
+        html.Label("Stock/Futures Symbol"),
+        dcc.Input(id='input-symbol', type='text', value='SPY', className='input-field'),
         
-        # Signal Configuration
-        html.Div([
-            html.Label("Long Signal Threshold"),
-            dcc.Slider(id='slider-min-confidence', min=0.5, max=1.0, step=0.05, value=0.75, 
-                      marks={i/10:f'{i/10:.1f}' for i in range(5, 11)}, tooltip={"placement": "bottom", "always_visible": True}),
-            
-            html.Label("Short Signal Threshold"),
-            dcc.Slider(id='slider-max-confidence', min=0.0, max=0.5, step=0.05, value=0.25, 
-                      marks={i/10:f'{i/10:.1f}' for i in range(0, 6)}, tooltip={"placement": "bottom", "always_visible": True}),
-        ]),
+        html.Label("Date Range"),
+        dcc.DatePickerRange(
+            id='input-date-range',
+            start_date=(datetime.now() - timedelta(days=365*2)).date(),
+            end_date=datetime.now().date(),
+            display_format='YYYY-MM-DD',
+            className='date-picker'
+        ),
         
-        # Risk Management
-        html.Div([
-            html.Label("Stop-Loss (%)"),
-            dcc.Slider(id='slider-loss-threshold', min=1, max=10, step=0.5, value=5, 
-                      marks={i:f'{i}%' for i in range(1, 11)}, tooltip={"placement": "bottom", "always_visible": True}),
-            
-            html.Label("Trailing Stop Scale"),
-            dcc.Slider(id='slider-trail-vol-scale', min=0, max=0.2, step=0.01, value=0.05, 
-                      marks={i/100:f'{i/100:.2f}' for i in range(0, 21, 5)}, tooltip={"placement": "bottom", "always_visible": True}),
-        ]),
+        html.Label("Starting Capital"),
+        dcc.Input(id='input-capital', type='number', value=100000, className='input-field'),
         
-        # Model Configuration
-        html.Div([
-            html.Label("XGBoost Trees"),
-            dcc.Input(id='input-n-estimators', type='number', value=500, min=50, max=2000, step=50, 
-                     placeholder='500', className='input-field'),
-            
-            html.Label("Train Split (%)"),
-            dcc.Slider(id='slider-train-pct', min=50, max=90, step=1, value=65, 
-                      marks={i:str(i) for i in range(50, 91, 10)}, tooltip={"placement": "bottom", "always_visible": True}),
-            
-            html.Label("Validation Split (%)"),
-            dcc.Slider(id='slider-val-pct', min=5, max=30, step=1, value=15, 
-                      marks={i:str(i) for i in range(5, 31, 5)}, tooltip={"placement": "bottom", "always_visible": True}),
-            
-            html.Div(id='split-warning', style={'color': '#ff4d4f', 'fontWeight': 'bold', 'marginTop': '6px', 'fontSize': '11px'}),
-            
-            html.Label("Early Stopping Rounds"),
-            dcc.Input(id='input-early-stopping', type='number', value=50, min=0, step=10, 
-                     placeholder='0 to disable', className='input-field'),
-        ]),
+        html.Label("Long Signal Confidence"),
+        dcc.Slider(id='slider-min-confidence', min=0.5, max=1.0, step=0.05, value=0.75, marks={i/10:str(i/10) for i in range(5, 11)}),
         
-        html.Button('▶ Run Backtest', id='run-button', n_clicks=0, className='run-button'),
+        html.Label("Short Signal Confidence"),
+        dcc.Slider(id='slider-max-confidence', min=0.0, max=0.5, step=0.05, value=0.25, marks={i/10:str(i/10) for i in range(0, 6)}),
         
+        html.Label("Stop-Loss Threshold (%)"),
+        dcc.Slider(id='slider-loss-threshold', min=1, max=10, step=0.5, value=5, marks={i:f'{i}%' for i in range(1, 11)}),
+        
+        html.Label("Trailing Stop Volatility Scale"),
+        dcc.Slider(id='slider-trail-vol-scale', min=0, max=0.2, step=0.01, value=0.05, marks={i/100:str(i/100) for i in range(0, 21, 5)}),
+        
+        html.Label("XGBoost Trees (n_estimators)"),
+        dcc.Input(id='input-n-estimators', type='number', value=500, min=50, max=2000, step=50, className='input-field'),
+
+        html.Label("Train Split (%)"),
+        dcc.Slider(id='slider-train-pct', min=50, max=90, step=1, value=65, marks={i:str(i) for i in range(50, 91, 10)}),
+
+        html.Label("Validation Split (%)"),
+        dcc.Slider(id='slider-val-pct', min=5, max=30, step=1, value=15, marks={i:str(i) for i in range(5, 31, 5)}),
+
+        html.Div(id='split-warning', style={'color': 'darkred', 'fontWeight': 'bold', 'marginTop': '6px'}),
+
+        html.Label("Early Stopping Rounds (0 to disable)"),
+        dcc.Input(id='input-early-stopping', type='number', value=50, min=0, step=10, className='input-field'),
+        
+        html.Button('Run Backtest', id='run-button', n_clicks=0, className='run-button')
+        ,
         html.Hr(),
-        html.H5('🔬 Experiment Runner'),
-        
-        html.Div([
-            html.Label('n_estimators'),
-            dcc.Input(id='exp-n-estimators', type='text', value='100,200,500', placeholder='100,200,500', className='input-field'),
-            
-            html.Label('Train % Range'),
-            dcc.Input(id='exp-train-pct', type='text', value='65,70', placeholder='65,70', className='input-field'),
-            
-            html.Label('Val % Range'),
-            dcc.Input(id='exp-val-pct', type='text', value='15,20', placeholder='15,20', className='input-field'),
-            
-            html.Label('Early Stopping'),
-            dcc.Input(id='exp-early-stopping', type='text', value='0,50', placeholder='0,50', className='input-field'),
-            
-            html.Label('Search Mode'),
-            dcc.RadioItems(id='exp-mode', options=[{'label':' Grid Search','value':'grid'},{'label':' Random','value':'random'}], 
-                          value='grid', style={'marginTop': '8px'}),
-            
-            html.Label('Random Trials'),
-            dcc.Input(id='exp-n-trials', type='number', value=10, min=1, placeholder='10', className='input-field'),
-        ]),
-        
-        html.Button('⚡ Run Experiments', id='run-experiments-button', n_clicks=0, className='run-button'),
-        html.Div(id='exp-progress', style={'marginTop':'12px', 'fontWeight':'bold', 'fontSize': '12px', 'color': 'var(--accent-yellow)'})
+        html.H5('Experiment Runner'),
+        html.Label('n_estimators (comma-separated)'),
+        dcc.Input(id='exp-n-estimators', type='text', value='100,200,500', className='input-field'),
+        html.Label('Train % (comma-separated)'),
+        dcc.Input(id='exp-train-pct', type='text', value='65,70', className='input-field'),
+        html.Label('Val % (comma-separated)'),
+        dcc.Input(id='exp-val-pct', type='text', value='15,20', className='input-field'),
+        html.Label('Early stopping (comma-separated, 0 disables)'),
+        dcc.Input(id='exp-early-stopping', type='text', value='0,50', className='input-field'),
+        html.Label('Mode'),
+        dcc.RadioItems(id='exp-mode', options=[{'label':'Grid','value':'grid'},{'label':'Random','value':'random'}], value='grid'),
+        html.Label('Random trials (if random mode)'),
+        dcc.Input(id='exp-n-trials', type='number', value=10, min=1, className='input-field'),
+        html.Button('Run Experiments', id='run-experiments-button', n_clicks=0, className='run-button'),
+        html.Div(id='exp-progress', style={'marginTop':'8px', 'fontWeight':'bold'})
     ])
 
 # =============================================================================
@@ -140,7 +105,7 @@ def build_control_panel():
 # =============================================================================
 app.layout = html.Div(id='main-container', style={'width': '100%', 'padding': '20px'}, children=[
     html.H1(app.title),
-    html.Div(className='app-content', style={'display': 'flex', 'gap': '30px', 'width': '100%'}, children=[
+    html.Div(style={'display': 'flex', 'gap': '30px', 'width': '100%'}, children=[
         build_control_panel(),
         dcc.Loading(id="loading-spinner", type="default", children=html.Div(id='results-output', style={'flex': '1', 'width': '90%', 'minWidth': '1200px'}))
     ])
