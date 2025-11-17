@@ -8,6 +8,13 @@ import plotly.graph_objects as go
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_report
+
+# Fix for yfinance API issues - configure session with proper headers
+import requests
+session = requests.Session()
+session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+})
 import joblib
 import json
 import os
@@ -19,6 +26,46 @@ from textblob import TextBlob
 import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# =============================================================================
+# Robust Data Fetching Function with Fallbacks
+# =============================================================================
+def fetch_stock_data(symbol, start_date, end_date, retries=3):
+    """
+    Fetch stock data with multiple fallback methods to handle API issues.
+    """
+    import time
+    
+    for attempt in range(retries):
+        try:
+            # Method 1: yfinance with Ticker.history()
+            ticker = yf.Ticker(symbol, session=session)
+            data = ticker.history(start=start_date, end=end_date, interval='1d')
+            if not data.empty:
+                # Standardize column names
+                if 'Close' not in data.columns and 'close' in data.columns:
+                    data.rename(columns={'close': 'Close', 'open': 'Open', 'high': 'High', 
+                                        'low': 'Low', 'volume': 'Volume'}, inplace=True)
+                return data
+        except:
+            pass
+        
+        try:
+            # Method 2: yfinance download with session
+            data = yf.download(symbol, start=start_date, end=end_date, interval='1d', progress=False, session=session)
+            if data is not None and not data.empty:
+                if isinstance(data.columns, pd.MultiIndex):
+                    data.columns = data.columns.get_level_values(0)
+                return data
+        except:
+            pass
+        
+        # Wait before retry (except on last attempt)
+        if attempt < retries - 1:
+            time.sleep(2 ** attempt)  # Exponential backoff
+    
+    # If all methods fail, return None
+    return None
 
 # =============================================================================
 # App Initialization
@@ -303,9 +350,23 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
         loss_threshold = loss_threshold_pct / 100.0
         
         # 1. Fetch & Feature Engineering
-        data = yf.download(symbol, start=start_date, end=end_date, interval='1d')
-        if data.empty:
-            return html.Div(f"No data found for symbol '{symbol}'. Check the symbol or date range.", style={'color': 'red', 'textAlign': 'center'})
+        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
+        if data is None or data.empty:
+            return html.Div([
+                html.H4(f"Unable to fetch data for '{symbol}'" , style={'color': 'red'}),
+                html.P([
+                    "This could be due to:",
+                    html.Br(),
+                    "• Yahoo Finance API temporary outage (common issue)",
+                    html.Br(),
+                    "• Invalid symbol name",
+                    html.Br(),
+                    "• No trading data for the selected date range",
+                    html.Br(),
+                    html.Br(),
+                    "Please try again in a few minutes, or try a different symbol like 'AAPL' or 'MSFT'."
+                ])
+            ], style={'textAlign': 'center', 'padding': '20px'})
 
         # Flatten MultiIndex columns if they exist (yfinance downloads can have MultiIndex columns)
         if isinstance(data.columns, pd.MultiIndex):
@@ -715,7 +776,12 @@ def _run_experiments_bg(n_est_str, train_str, val_str, es_str, mode, n_trials, s
 
         update_progress('Fetching data...')
         # Fetch and preprocess data once
-        data = yf.download(symbol, start=start_date, end=end_date, interval='1d')
+        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
+        if data is None or data.empty:
+            update_progress(f'ERROR: Unable to fetch data for {symbol}. Yahoo Finance API may be temporarily unavailable. Please try again.')
+            with exp_lock:
+                exp_status['running'] = False
+            return
         if isinstance(data.columns, pd.MultiIndex):
             data.columns = data.columns.get_level_values(0)
         data['MA20'] = data['Close'].rolling(window=20).mean()
@@ -862,4 +928,4 @@ def poll_exp_progress(_):
             return exp_status['progress']
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='127.0.0.1', port=8050)
