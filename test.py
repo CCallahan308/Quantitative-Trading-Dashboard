@@ -8,26 +8,6 @@ import sys
 
 print("This legacy file has been archived to legacy/test.py. Use Quant_Dashboard.py instead.")
 sys.exit(0)
-
-        elif not position and signals[i] == -1 and not np.isnan(closes[i]):  # Short
-            position = 'short'
-            entry_price = closes[i]
-            peak_price = entry_price
-            in_trade[i] = True
-            entry_prices[i] = entry_price.item()
-
-        elif position == 'long' and not np.isnan(entry_price):
-            current_price = closes[i]
-            current_return = (current_price - entry_price) / entry_price
-            peak_price = max(peak_price, current_price)
-            trailing_return = (current_price - peak_price) / peak_price
-
-            vol_stop_threshold = max(trail_vol_scale * volatility[i] / np.sqrt(252), 0.01)
-
-            if current_return <= -loss_threshold:
-                pnl[i] = current_return
-                exit_reasons[i] = 'stop-loss'
-                position = None
             elif trailing_return <= -vol_stop_threshold:
                 pnl[i] = current_return
                 exit_reasons[i] = 'trailing-stop'

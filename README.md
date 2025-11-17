@@ -302,9 +302,9 @@ MIT License - see LICENSE file for details
 
 ## 👤 Author
 
-Built by a 4th-year quantitative finance student at [Your University]
+Built by CCallahan308
 
-For questions or collaboration: [your.email@university.edu]
+For questions or collaboration, please open an issue on GitHub.
 
 ## 🤝 Contributing
 
