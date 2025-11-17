@@ -1,0 +1,10 @@
+dash==3.2.0
+plotly==5.23.2
+pandas==2.2.3
+numpy==1.26.4
+yfinance==0.2.40
+xgboost==2.0.3
+scikit-learn==1.5.2
+joblib==1.4.2
+textblob==0.18.0
+python-dateutil==2.9.0

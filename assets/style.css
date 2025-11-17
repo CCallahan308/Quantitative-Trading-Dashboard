@@ -1,0 +1,978 @@
+/* =============================================================================
+   JANE STREET QUANTITATIVE TRADING DASHBOARD
+   Professional, Dark-Mode Enterprise Design
+   ============================================================================= */
+
+:root {
+  /* Color Palette - Dark Mode Professional */
+  --primary-dark: #0a0e27;
+  --secondary-dark: #1a1f3a;
+  --accent-green: #00d084;
+  --accent-red: #ff4d4f;
+  --accent-yellow: #faad14;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --border-color: #2a3050;
+  --input-bg: #121829;
+  --hover-bg: #252d48;
+  --success: #52c41a;
+  --warning: #faad14;
+  --danger: #ff4d4f;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  background-color: var(--primary-dark);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   MAIN CONTAINER & LAYOUT
+   ============================================================================= */
+
+#main-container {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #0f1433 100%);
+  min-height: 100vh;
+  padding: 40px 50px !important;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#main-container h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 40px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--accent-green);
+}
+
+/* =============================================================================
+   CONTROL PANEL STYLING
+   ============================================================================= */
+
+#control-panel {
+  background: linear-gradient(180deg, var(--secondary-dark) 0%, rgba(26, 31, 58, 0.8) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 32px;
+  width: 380px !important;
+  min-width: 380px;
+  height: fit-content;
+  position: sticky;
+  top: 40px;
+  box-shadow: 0 8px 32px rgba(0, 208, 132, 0.08), 0 4px 16px rgba(0, 0, 0, 0.4);
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+#control-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+#control-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#control-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 208, 132, 0.3);
+  border-radius: 3px;
+}
+
+#control-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-green);
+}
+
+#control-panel h4 {
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 24px;
+  color: var(--accent-green);
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--accent-green);
+  text-shadow: 0 0 10px rgba(0, 208, 132, 0.3);
+}
+
+#control-panel h5 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 28px;
+  margin-bottom: 18px;
+  color: var(--accent-yellow);
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(250, 173, 20, 0.3);
+}
+
+#control-panel label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+#control-panel .input-field:focus ~ label,
+#control-panel label:hover {
+  color: var(--accent-green);
+}
+
+#control-panel hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 28px 0;
+  opacity: 0.5;
+}
+
+/* =============================================================================
+   INPUT FIELDS & FORM ELEMENTS
+   ============================================================================= */
+
+.input-field {
+  width: 100%;
+  padding: 12px 14px;
+  background-color: rgba(18, 24, 41, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  margin-bottom: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.input-field:hover {
+  border-color: rgba(0, 208, 132, 0.5);
+  background-color: rgba(0, 208, 132, 0.03);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(0, 208, 132, 0.25), 0 0 0 3px rgba(0, 208, 132, 0.1);
+  background-color: rgba(0, 208, 132, 0.08);
+}
+
+.input-field::placeholder {
+  color: rgba(179, 179, 179, 0.6);
+}
+
+/* Date Picker */
+.date-picker {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.date-picker .DateRangePicker_picker {
+  min-width: 600px;
+  box-shadow: 0 12px 48px rgba(0, 208, 132, 0.15), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.date-picker .CalendarDay {
+  width: 40px;
+  height: 40px;
+  font-size: 13px;
+  padding: 0;
+}
+
+.date-picker .CalendarMonth {
+  padding: 20px;
+  min-width: 280px;
+}
+
+.date-picker .DayPickerNavigation {
+  padding: 0 12px;
+}
+
+.date-picker .DatePickerRange_start .DateInput {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.date-picker .DatePickerRange_end .DateInput {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.date-picker .DateInput input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: none;
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+.date-picker .DateInput input::placeholder {
+  color: var(--text-secondary);
+}
+
+.date-picker .DateInput input:focus {
+  outline: none;
+  background-color: rgba(0, 208, 132, 0.05);
+}
+
+.date-picker .SingleDatePickerInput {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+}
+
+.date-picker .SingleDatePickerInput:focus-within {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 2px rgba(0, 208, 132, 0.1);
+}
+
+/* Calendar popover styling */
+.date-picker .DateRangePicker_picker {
+  background-color: var(--secondary-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.date-picker .DayPicker {
+  background-color: var(--secondary-dark);
+}
+
+.date-picker .DayPicker_weekHeader {
+  color: var(--text-secondary);
+}
+
+.date-picker .DayPicker_weekHeader_ul {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.date-picker .CalendarDay {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+}
+
+.date-picker .CalendarDay:hover {
+  background-color: rgba(0, 208, 132, 0.1);
+  border-radius: 3px;
+}
+
+.date-picker .CalendarDay_selected {
+  background-color: var(--accent-green);
+  color: var(--primary-dark);
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.date-picker .CalendarDay_highlighted_in_range {
+  background-color: rgba(0, 208, 132, 0.2);
+  border-radius: 0;
+}
+
+.date-picker .CalendarDay_disabled {
+  background-color: transparent;
+  color: var(--text-secondary);
+  opacity: 0.4;
+}
+
+.date-picker .CalendarMonth {
+  background-color: var(--secondary-dark);
+}
+
+.date-picker .CalendarMonth_caption {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+.date-picker .DayPickerNavigation_button {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-picker .DayPickerNavigation_button:hover {
+  background-color: rgba(0, 208, 132, 0.1);
+  border-color: var(--accent-green);
+}
+
+.date-picker .DayPickerNavigation_button__prev {
+  left: 12px;
+}
+
+.date-picker .DayPickerNavigation_button__next {
+  right: 12px;
+}
+
+/* Hide week numbers and other unwanted elements */
+.date-picker .WeekNumber {
+  display: none !important;
+}
+
+.date-picker .DayPicker_weekNumber {
+  display: none !important;
+}
+
+.date-picker .DayPicker_weekHeader_ul li:first-child {
+  display: none !important;
+}
+
+.date-picker .CalendarMonth_caption {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 15px;
+  padding: 12px 0 20px 0;
+  margin: 0;
+}
+
+.date-picker .DayPicker_weekHeader {
+  margin-bottom: 8px;
+}
+
+.date-picker .DayPicker_weekHeader_ul li {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+/* Clear button styling */
+.date-picker .DateRangePickerInput_clearDates {
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.date-picker .DateRangePickerInput_clearDates:hover {
+  color: var(--accent-green);
+}
+
+.date-picker .DateRangePickerInput_arrow {
+  color: var(--text-secondary);
+}
+
+/* Slider Styling */
+.rc-slider {
+  margin: 16px 0 28px 0;
+}
+
+.rc-slider-track {
+  background: linear-gradient(90deg, var(--accent-green), #00e08f);
+  height: 4px;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(0, 208, 132, 0.2);
+}
+
+.rc-slider-rail {
+  background-color: rgba(42, 48, 80, 0.6);
+  height: 4px;
+  border-radius: 2px;
+}
+
+.rc-slider-handle {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, var(--accent-green), #00e08f);
+  border: 2px solid var(--primary-dark);
+  border-radius: 50%;
+  top: -6px;
+  margin-left: -8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 208, 132, 0.3);
+}
+
+.rc-slider-handle:hover {
+  box-shadow: 0 0 0 6px rgba(0, 208, 132, 0.25), 0 2px 12px rgba(0, 208, 132, 0.35);
+  transform: scale(1.15);
+}
+
+.rc-slider-mark-text {
+  color: rgba(179, 179, 179, 0.7);
+  font-size: 10px;
+}
+
+/* Radio Items */
+.rc-radio-group {
+  display: flex;
+  gap: 18px;
+  margin: 14px 0 28px 0;
+}
+
+.rc-radio-wrapper {
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.rc-radio {
+  background-color: rgba(18, 24, 41, 0.6);
+  border-color: var(--border-color);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.rc-radio:hover {
+  border-color: var(--accent-green);
+}
+
+.rc-radio-checked .rc-radio-inner {
+  background: linear-gradient(135deg, var(--accent-green), #00e08f);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 8px rgba(0, 208, 132, 0.3);
+}
+
+/* =============================================================================
+   BUTTONS & ACTIONS
+   ============================================================================= */
+
+.run-button {
+  width: 100%;
+  padding: 13px 18px;
+  margin-top: 20px;
+  background: linear-gradient(135deg, var(--accent-green) 0%, #00c76e 100%);
+  color: var(--primary-dark);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(0, 208, 132, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.run-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.4s ease;
+}
+
+.run-button:hover::before {
+  left: 100%;
+}
+
+.run-button:hover {
+  background: linear-gradient(135deg, #00e08f 0%, #00d084 100%);
+  box-shadow: 0 8px 28px rgba(0, 208, 132, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+}
+
+.run-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 208, 132, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.run-button:disabled {
+  background: linear-gradient(135deg, var(--text-secondary) 0%, rgba(179, 179, 179, 0.7) 100%);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
+  transform: none;
+}
+
+.app-content {
+  display: flex;
+  gap: 40px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 20px;
+}
+
+#results-output {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 1200px;
+  width: 100%;
+}
+
+.results-section {
+  background: linear-gradient(135deg, rgba(26, 31, 58, 0.8), rgba(21, 26, 48, 0.6));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(0, 208, 132, 0.08), 0 4px 16px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.results-section:hover {
+  border-color: rgba(0, 208, 132, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 208, 132, 0.12), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.section-header h3 {
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0;
+  color: var(--accent-green);
+  text-shadow: 0 0 8px rgba(0, 208, 132, 0.2);
+}
+
+.section-header .status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-green), rgba(0, 208, 132, 0.5));
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* =============================================================================
+   PERFORMANCE METRICS
+   ============================================================================= */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: linear-gradient(135deg, rgba(18, 24, 41, 0.8), rgba(26, 31, 58, 0.6));
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.metric-card:hover {
+  border-color: var(--accent-green);
+  background: linear-gradient(135deg, rgba(0, 208, 132, 0.08), rgba(26, 31, 58, 0.8));
+  box-shadow: 0 0 16px rgba(0, 208, 132, 0.15), 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent-green);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px rgba(0, 208, 132, 0.2);
+}
+
+.metric-value.positive {
+  color: var(--accent-green);
+  text-shadow: 0 0 8px rgba(0, 208, 132, 0.3);
+}
+
+.metric-value.negative {
+  color: var(--accent-red);
+  text-shadow: 0 0 8px rgba(255, 77, 79, 0.2);
+}
+
+.metric-value.neutral {
+  color: var(--accent-yellow);
+  text-shadow: 0 0 8px rgba(250, 173, 20, 0.2);
+}
+
+.metric-change {
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--text-secondary);
+}
+
+/* =============================================================================
+   CHARTS & VISUALIZATIONS
+   ============================================================================= */
+
+.chart-container {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 400px;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-green);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* =============================================================================
+   TABLES & DATA DISPLAY
+   ============================================================================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(135deg, rgba(18, 24, 41, 0.6), rgba(26, 31, 58, 0.4));
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+table th {
+  background: linear-gradient(90deg, rgba(0, 208, 132, 0.15), rgba(0, 208, 132, 0.05));
+  border-bottom: 2px solid var(--accent-green);
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent-green);
+  text-shadow: 0 0 6px rgba(0, 208, 132, 0.15);
+}
+
+table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(42, 48, 80, 0.5);
+  font-size: 12px;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+}
+
+table tbody tr:hover {
+  background-color: rgba(0, 208, 132, 0.08);
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =============================================================================
+   SUMMARY OUTPUT
+   ============================================================================= */
+
+.summary-container {
+  background: linear-gradient(135deg, rgba(18, 24, 41, 0.8), rgba(26, 31, 58, 0.6));
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 24px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 600px;
+  overflow-y: auto;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 16px rgba(0, 208, 132, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.summary-label {
+  color: var(--accent-green);
+  font-weight: 800;
+  text-shadow: 0 0 4px rgba(0, 208, 132, 0.2);
+}
+
+.summary-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.summary-error {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.summary-warning {
+  color: var(--accent-yellow);
+  font-weight: 700;
+}
+
+/* =============================================================================
+   LOADING & STATUS
+   ============================================================================= */
+
+#loading-spinner {
+  width: 100%;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  border-top-color: var(--accent-green);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-message {
+  padding: 12px 16px;
+  background-color: var(--input-bg);
+  border-left: 3px solid var(--accent-green);
+  border-radius: 2px;
+  color: var(--text-primary);
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.status-message.warning {
+  border-left-color: var(--accent-yellow);
+  color: var(--accent-yellow);
+}
+
+.status-message.error {
+  border-left-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+/* =============================================================================
+   SCROLLBAR STYLING
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--secondary-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-green);
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+@media (max-width: 1600px) {
+  #control-panel {
+    width: 300px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  #main-container {
+    padding: 20px !important;
+  }
+  
+  #control-panel {
+    width: 280px !important;
+    position: static;
+    max-height: none;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  #main-container {
+    padding: 12px !important;
+  }
+  
+  #main-container h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  #control-panel {
+    width: 100% !important;
+    margin-bottom: 20px;
+    position: static;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  table {
+    font-size: 11px;
+  }
+  
+  table th, table td {
+    padding: 8px;
+  }
+}
+
+/* =============================================================================
+   PLOTLY OVERRIDES
+   ============================================================================= */
+
+.plotly-graph-div {
+  background-color: transparent !important;
+}
+
+.plotly .xaxislayer-above .xtick text {
+  color: var(--text-secondary) !important;
+  font-size: 11px !important;
+}
+
+.plotly .yaxislayer-above .ytick text {
+  color: var(--text-secondary) !important;
+  font-size: 11px !important;
+}
+
+.plotly text {
+  font-family: 'Menlo', 'Monaco', monospace !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Heatmap text styling */
+.hovertext {
+  font-family: 'Menlo', 'Monaco', monospace !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: var(--accent-green) !important;
+}
+#control-panel .date-picker {
+    width: 100%;
+    box-sizing: border-box; /* Ensure padding doesn't expand width */
+    margin-bottom: 15px;
+}
+
+#control-panel label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.run-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.run-button:hover {
+    background-color: #0056b3;
+}
+
+/* Results Area */
+#results-output {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0; /* Prevents flexbox overflow issues */
+}
+
+.summary-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary-container .markdown {
+    white-space: pre-wrap;
+    font-family: "Courier New", Courier, monospace;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    font-size: 0.9em; /* Smaller mono font */
+}
+
+/* Ensure graphs are responsive */
+.dash-graph {
+    width: 100%;
+}
