@@ -17,7 +17,7 @@ http://127.0.0.1:8050/
 
 ### Start Application
 ```bash
-python "test v3.py"
+python Quant_Dashboard.py
 ```
 
 ### Run Headless Backtest
@@ -81,7 +81,7 @@ Trailing Stop Scale: 0.10 (loose)
 
 | File | Purpose |
 |------|---------|
-| `test v3.py` | Main application |
+| `Quant_Dashboard.py` | Main application |
 | `run_full_backtest.py` | Headless runner |
 | `test_syntax.py` | Syntax validator |
 | `assets/style.css` | Dark-mode UI styling |
@@ -207,7 +207,7 @@ A: All runs are saved to `runs/` directory automatically.
 ### If App Crashes
 ```bash
 # Restart with new port
-# In test v3.py, change last line to:
+# In Quant_Dashboard.py, change last line to:
 app.run(debug=True, port=8051)
 ```
 
@@ -220,7 +220,7 @@ app.run(debug=True, port=8051)
 ### If Nothing Displays
 ```bash
 # Press F5 in browser to reload
-# Or restart: python "test v3.py"
+# Or restart: python Quant_Dashboard.py
 ```
 
 ---

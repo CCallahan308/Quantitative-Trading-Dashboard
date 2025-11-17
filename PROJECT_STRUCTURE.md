@@ -4,7 +4,7 @@
 quantitative-trading-dashboard/
 │
 ├── 🎨 APPLICATION FILES
-│   ├── test v3.py                    # Main Dash application (866 lines)
+│   ├── Quant_Dashboard.py             # Main Dash application (866 lines)
 │   ├── run_full_backtest.py          # Headless backtest runner
 │   └── test_syntax.py                # Syntax validator
 │
@@ -79,7 +79,7 @@ quantitative-trading-dashboard/
 ## 🎯 File Purposes Quick Reference
 
 ### Application Files (Essential)
-- **test v3.py** - Entire Dash application; 866 lines of production code
+- **Quant_Dashboard.py** - Entire Dash application; 866 lines of production code
 - **run_full_backtest.py** - Standalone runner for headless backtesting
 - **test_syntax.py** - Validation script to ensure imports work
 
@@ -154,7 +154,7 @@ rm dashboard_app.py
 rm vbt_app.py
 
 # Keep only essential files:
-# - test v3.py (main)
+# - Quant_Dashboard.py (main)
 # - run_full_backtest.py (headless)
 # - test_syntax.py (validator)
 

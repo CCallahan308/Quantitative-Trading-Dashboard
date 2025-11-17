@@ -14,8 +14,8 @@ Complete guide to get the Quantitative Trading Dashboard running on your machine
 ### Step 1: Clone Repository
 
 ```powershell
-git clone https://github.com/yourusername/quant-trading-dashboard.git
-cd quant-trading-dashboard
+git clone https://github.com/CCallahan308/test.git
+cd test
 ```
 
 ### Step 2: Create Virtual Environment
@@ -52,7 +52,7 @@ Expected output:
 ### Step 5: Start Dashboard
 
 ```powershell
-python "test v3.py"
+python Quant_Dashboard.py
 ```
 
 Navigate to `http://127.0.0.1:8050/` in your browser.
@@ -62,8 +62,8 @@ Navigate to `http://127.0.0.1:8050/` in your browser.
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/quant-trading-dashboard.git
-cd quant-trading-dashboard
+git clone https://github.com/CCallahan308/test.git
+cd test
 ```
 
 ### Step 2: Create Virtual Environment
@@ -118,7 +118,7 @@ flake8 Quant_Dashboard.py --max-line-length=100
 **Solution**: Stop the existing process or use a different port
 
 ```python
-# In test v3.py, change the last line:
+# In Quant_Dashboard.py, change the last line:
 if __name__ == '__main__':
     app.run(debug=True, port=8051)  # Use 8051 instead
 ```
@@ -159,7 +159,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "test v3.py"]
+CMD ["python", "Quant_Dashboard.py"]
 ```
 
 ### Build and Run

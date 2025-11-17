@@ -75,7 +75,7 @@ flake8 test\ v3.py
 python test_syntax.py
 
 # Manual testing
-python "test v3.py"
+python Quant_Dashboard.py
 # Navigate to http://127.0.0.1:8050 and test features
 ```
 

@@ -72,8 +72,8 @@ The dashboard features a professional, dark-mode design inspired by enterprise t
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/quant-trading-dashboard.git
-cd quant-trading-dashboard
+git clone https://github.com/CCallahan308/test.git
+cd test
 
 # Create virtual environment
 python -m venv venv
@@ -90,7 +90,6 @@ python Quant_Dashboard.py
 ```
 
 Open browser to `http://127.0.0.1:8050/`
-├── Quant_Dashboard.py          # Main Dash application (renamed from "test v3.py")
 
 ### Quick Backtest (Headless)
 
@@ -206,7 +205,7 @@ Results include:
 
 ```
 .
-├── test v3.py                  # Main Dash application
+├── Quant_Dashboard.py          # Main Dash application
 ├── run_full_backtest.py        # Headless backtest runner
 ├── test_syntax.py              # Syntax validation script
 ├── requirements.txt            # Python dependencies
