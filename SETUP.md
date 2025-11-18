@@ -14,7 +14,7 @@ Complete guide to get the Quantitative Trading Dashboard running on your machine
 ### Step 1: Clone Repository
 
 ```powershell
-git clone https://github.com/CCallahan308/test.git
+git clone https://github.com/CCallahan308/Quantitative-Trading-Dashboard.git
 cd test
 ```
 
