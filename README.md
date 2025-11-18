@@ -73,7 +73,7 @@ The dashboard features a professional, dark-mode design inspired by enterprise t
 ```bash
 # Clone repository
 git clone https://github.com/CCallahan308/Quantitative-Trading-Dashboard.git
-cd test
+cd Quantitative-Trading-Dashboard
 
 # Create virtual environment
 python -m venv venv
