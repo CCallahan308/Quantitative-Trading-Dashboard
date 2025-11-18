@@ -11,10 +11,6 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_rep
 
 # Fix for yfinance API issues - configure session with proper headers
 import requests
-session = requests.Session()
-session.headers.update({
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-})
 import joblib
 import json
 import os
@@ -36,35 +32,77 @@ def fetch_stock_data(symbol, start_date, end_date, retries=3):
     """
     import time
     
+    # Create a custom session with headers for each request
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
+    })
+    
     for attempt in range(retries):
         try:
-            # Method 1: yfinance with Ticker.history()
-            ticker = yf.Ticker(symbol, session=session)
-            data = ticker.history(start=start_date, end=end_date, interval='1d')
-            if not data.empty:
+            # Method 1: yfinance download with session and explicit parameters
+            data = yf.download(
+                symbol, 
+                start=start_date, 
+                end=end_date, 
+                interval='1d', 
+                progress=False,
+                auto_adjust=True,
+                prepost=False,
+                threads=True,
+                proxy=None
+            )
+            
+            if data is not None and not data.empty and len(data) > 0:
+                # Handle MultiIndex columns
+                if isinstance(data.columns, pd.MultiIndex):
+                    data.columns = data.columns.get_level_values(0)
+                
+                # Standardize column names
+                column_mapping = {
+                    'close': 'Close', 'open': 'Open', 'high': 'High', 
+                    'low': 'Low', 'volume': 'Volume'
+                }
+                data.rename(columns={k: v for k, v in column_mapping.items() if k in data.columns}, inplace=True)
+                
+                print(f"Successfully fetched {len(data)} rows for {symbol}")
+                return data
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed for {symbol}: {str(e)}")
+        
+        try:
+            # Method 2: yfinance Ticker with history
+            ticker = yf.Ticker(symbol)
+            data = ticker.history(
+                start=start_date, 
+                end=end_date, 
+                interval='1d',
+                auto_adjust=True,
+                prepost=False
+            )
+            
+            if not data.empty and len(data) > 0:
                 # Standardize column names
                 if 'Close' not in data.columns and 'close' in data.columns:
                     data.rename(columns={'close': 'Close', 'open': 'Open', 'high': 'High', 
                                         'low': 'Low', 'volume': 'Volume'}, inplace=True)
+                print(f"Successfully fetched {len(data)} rows for {symbol} (Ticker method)")
                 return data
-        except:
-            pass
-        
-        try:
-            # Method 2: yfinance download with session
-            data = yf.download(symbol, start=start_date, end=end_date, interval='1d', progress=False, session=session)
-            if data is not None and not data.empty:
-                if isinstance(data.columns, pd.MultiIndex):
-                    data.columns = data.columns.get_level_values(0)
-                return data
-        except:
-            pass
+        except Exception as e:
+            print(f"Ticker method attempt {attempt + 1} failed for {symbol}: {str(e)}")
         
         # Wait before retry (except on last attempt)
         if attempt < retries - 1:
-            time.sleep(2 ** attempt)  # Exponential backoff
+            time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s
     
     # If all methods fail, return None
+    print(f"All attempts failed for {symbol}")
     return None
 
 # =============================================================================
@@ -90,13 +128,22 @@ def build_control_panel():
         dcc.Input(id='input-symbol', type='text', value='SPY', className='input-field'),
         
         html.Label("Date Range"),
-        dcc.DatePickerRange(
-            id='input-date-range',
-            start_date=(datetime.now() - timedelta(days=365*2)).date(),
-            end_date=datetime.now().date(),
-            display_format='YYYY-MM-DD',
-            className='date-picker'
-        ),
+        html.Div(className='date-range-wrapper', children=[
+            dcc.Input(
+                id='input-start-date',
+                type='date',
+                value=(datetime.now() - timedelta(days=365*2)).date().isoformat(),
+                className='input-field',
+                style={'marginBottom': '0'}
+            ),
+            dcc.Input(
+                id='input-end-date',
+                type='date',
+                value=datetime.now().date().isoformat(),
+                className='input-field',
+                style={'marginBottom': '0'}
+            ),
+        ]),
         
         html.Label("Starting Capital"),
         dcc.Input(id='input-capital', type='number', value=100000, className='input-field'),
@@ -330,8 +377,8 @@ def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
     Output('results-output', 'children'),
     Input('run-button', 'n_clicks'),
     [State('input-symbol', 'value'),
-     State('input-date-range', 'start_date'),
-     State('input-date-range', 'end_date'),
+     State('input-start-date', 'value'),
+     State('input-end-date', 'value'),
      State('input-capital', 'value'),
      State('slider-min-confidence', 'value'),
      State('slider-max-confidence', 'value'),
@@ -726,7 +773,7 @@ def validate_splits(train_val, val_val):
 @app.callback(
     Output('exp-progress', 'children'),
     Input('run-experiments-button', 'n_clicks'),
-    [State('exp-n-estimators', 'value'), State('exp-train-pct', 'value'), State('exp-val-pct', 'value'), State('exp-early-stopping', 'value'), State('exp-mode', 'value'), State('exp-n-trials', 'value'), State('input-symbol','value'), State('input-date-range','start_date'), State('input-date-range','end_date'), State('slider-min-confidence','value'), State('slider-max-confidence','value'), State('slider-loss-threshold','value'), State('slider-trail-vol-scale','value')]
+    [State('exp-n-estimators', 'value'), State('exp-train-pct', 'value'), State('exp-val-pct', 'value'), State('exp-early-stopping', 'value'), State('exp-mode', 'value'), State('exp-n-trials', 'value'), State('input-symbol','value'), State('input-start-date','value'), State('input-end-date','value'), State('slider-min-confidence','value'), State('slider-max-confidence','value'), State('slider-loss-threshold','value'), State('slider-trail-vol-scale','value')]
 )
 def run_experiments(n_clicks, n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, min_conf, max_conf, loss_threshold_pct, trail_vol_scale):
     if not n_clicks:

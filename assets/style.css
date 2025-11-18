@@ -1,23 +1,26 @@
 /* =============================================================================
-   JANE STREET QUANTITATIVE TRADING DASHBOARD
-   Professional, Dark-Mode Enterprise Design
+   TWO SIGMA INSPIRED QUANTITATIVE TRADING DASHBOARD
+   Minimalist, Institutional, Premium Design
    ============================================================================= */
 
 :root {
-  /* Color Palette - Dark Mode Professional */
-  --primary-dark: #0a0e27;
-  --secondary-dark: #1a1f3a;
-  --accent-green: #00d084;
-  --accent-red: #ff4d4f;
-  --accent-yellow: #faad14;
-  --text-primary: #ffffff;
-  --text-secondary: #b3b3b3;
-  --border-color: #2a3050;
-  --input-bg: #121829;
-  --hover-bg: #252d48;
-  --success: #52c41a;
-  --warning: #faad14;
-  --danger: #ff4d4f;
+  /* Two Sigma Color Palette - Clean & Professional */
+  --primary-bg: #0f1419;
+  --secondary-bg: #1a1f2e;
+  --tertiary-bg: #242b3a;
+  --accent-primary: #00a86b;
+  --accent-secondary: #4a90e2;
+  --accent-red: #e74c3c;
+  --text-primary: #e8eaed;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --border-light: #2d3748;
+  --border-med: #374151;
+  --input-bg: #1a1f2e;
+  --hover-bg: #2d3748;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #e74c3c;
 }
 
 * {
@@ -29,10 +32,11 @@
 html, body {
   width: 100%;
   height: 100%;
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-  background-color: var(--primary-dark);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background-color: var(--primary-bg);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
 }
 
 /* =============================================================================
@@ -40,9 +44,9 @@ html, body {
    ============================================================================= */
 
 #main-container {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, #0f1433 100%);
+  background: var(--primary-bg);
   min-height: 100vh;
-  padding: 40px 50px !important;
+  padding: 48px 60px !important;
   width: 100%;
   max-width: 100vw;
   overflow-x: auto;
@@ -52,18 +56,15 @@ html, body {
 }
 
 #main-container h1 {
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  margin-bottom: 40px;
+  font-size: 38px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  margin-bottom: 50px;
   color: var(--text-primary);
   text-transform: uppercase;
-  background: linear-gradient(90deg, var(--text-primary), var(--accent-green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--accent-green);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 24px;
 }
 
 /* =============================================================================
@@ -71,19 +72,18 @@ html, body {
    ============================================================================= */
 
 #control-panel {
-  background: linear-gradient(180deg, var(--secondary-dark) 0%, rgba(26, 31, 58, 0.8) 100%);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
   padding: 32px;
-  width: 380px !important;
-  min-width: 380px;
+  width: 340px !important;
+  min-width: 340px;
   height: fit-content;
   position: sticky;
-  top: 40px;
-  box-shadow: 0 8px 32px rgba(0, 208, 132, 0.08), 0 4px 16px rgba(0, 0, 0, 0.4);
+  top: 48px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
   max-height: calc(100vh - 120px);
-  backdrop-filter: blur(8px);
   flex-shrink: 0;
 }
 
@@ -96,60 +96,58 @@ html, body {
 }
 
 #control-panel::-webkit-scrollbar-thumb {
-  background: rgba(0, 208, 132, 0.3);
+  background: var(--border-med);
   border-radius: 3px;
 }
 
 #control-panel::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-green);
+  background: var(--text-tertiary);
 }
 
 #control-panel h4 {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1.2px;
   margin-bottom: 24px;
-  color: var(--accent-green);
+  color: var(--text-primary);
   padding-bottom: 16px;
-  border-bottom: 2px solid var(--accent-green);
-  text-shadow: 0 0 10px rgba(0, 208, 132, 0.3);
+  border-bottom: 1px solid var(--border-light);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 #control-panel h5 {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-top: 28px;
   margin-bottom: 18px;
-  color: var(--accent-yellow);
+  color: var(--text-primary);
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(250, 173, 20, 0.3);
+  border-bottom: 1px solid var(--border-light);
 }
 
 #control-panel label {
   display: block;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-top: 18px;
-  margin-bottom: 8px;
+  letter-spacing: 0.8px;
+  margin-top: 20px;
+  margin-bottom: 10px;
   color: var(--text-secondary);
   transition: color 0.2s ease;
 }
 
-#control-panel .input-field:focus ~ label,
 #control-panel label:hover {
-  color: var(--accent-green);
+  color: var(--text-primary);
 }
 
 #control-panel hr {
   border: none;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-light);
   margin: 28px 0;
-  opacity: 0.5;
 }
 
 /* =============================================================================
@@ -159,314 +157,120 @@ html, body {
 .input-field {
   width: 100%;
   padding: 12px 14px;
-  background-color: rgba(18, 24, 41, 0.6);
-  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   color: var(--text-primary);
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 12px;
-  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  transition: all 0.25s ease;
   margin-bottom: 14px;
-  backdrop-filter: blur(4px);
 }
 
 .input-field:hover {
-  border-color: rgba(0, 208, 132, 0.5);
-  background-color: rgba(0, 208, 132, 0.03);
+  border-color: var(--border-med);
+  background-color: var(--tertiary-bg);
 }
 
 .input-field:focus {
   outline: none;
-  border-color: var(--accent-green);
-  box-shadow: 0 0 12px rgba(0, 208, 132, 0.25), 0 0 0 3px rgba(0, 208, 132, 0.1);
-  background-color: rgba(0, 208, 132, 0.08);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
+  background-color: var(--input-bg);
 }
 
 .input-field::placeholder {
-  color: rgba(179, 179, 179, 0.6);
+  color: var(--text-tertiary);
 }
 
-/* Date Picker */
-.date-picker {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.date-picker .DateRangePicker_picker {
-  min-width: 600px;
-  box-shadow: 0 12px 48px rgba(0, 208, 132, 0.15), 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-
-.date-picker .CalendarDay {
-  width: 40px;
-  height: 40px;
-  font-size: 13px;
-  padding: 0;
-}
-
-.date-picker .CalendarMonth {
-  padding: 20px;
-  min-width: 280px;
-}
-
-.date-picker .DayPickerNavigation {
-  padding: 0 12px;
-}
-
-.date-picker .DatePickerRange_start .DateInput {
+/* Native HTML Date Inputs */
+input[type='date'] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 10px 12px;
-  color: var(--text-primary);
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 12px;
-  transition: all 0.2s ease;
-}
-
-.date-picker .DatePickerRange_end .DateInput {
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 10px 12px;
-  color: var(--text-primary);
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 12px;
-  transition: all 0.2s ease;
-}
-
-.date-picker .DateInput input {
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  border: none;
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 12px;
-  padding: 8px 0;
-}
-
-.date-picker .DateInput input::placeholder {
-  color: var(--text-secondary);
-}
-
-.date-picker .DateInput input:focus {
-  outline: none;
-  background-color: rgba(0, 208, 132, 0.05);
-}
-
-.date-picker .SingleDatePickerInput {
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 10px 12px;
-  transition: all 0.2s ease;
-}
-
-.date-picker .SingleDatePickerInput:focus-within {
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 2px rgba(0, 208, 132, 0.1);
-}
-
-/* Calendar popover styling */
-.date-picker .DateRangePicker_picker {
-  background-color: var(--secondary-dark);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.date-picker .DayPicker {
-  background-color: var(--secondary-dark);
-}
-
-.date-picker .DayPicker_weekHeader {
-  color: var(--text-secondary);
-}
-
-.date-picker .DayPicker_weekHeader_ul {
-  border-bottom: 1px solid var(--border-color);
-}
-
-.date-picker .CalendarDay {
-  background-color: transparent;
-  border: 1px solid transparent;
   color: var(--text-primary);
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 12px;
-}
-
-.date-picker .CalendarDay:hover {
-  background-color: rgba(0, 208, 132, 0.1);
-  border-radius: 3px;
-}
-
-.date-picker .CalendarDay_selected {
-  background-color: var(--accent-green);
-  color: var(--primary-dark);
-  border-radius: 3px;
-  font-weight: 700;
-}
-
-.date-picker .CalendarDay_highlighted_in_range {
-  background-color: rgba(0, 208, 132, 0.2);
-  border-radius: 0;
-}
-
-.date-picker .CalendarDay_disabled {
-  background-color: transparent;
-  color: var(--text-secondary);
-  opacity: 0.4;
-}
-
-.date-picker .CalendarMonth {
-  background-color: var(--secondary-dark);
-}
-
-.date-picker .CalendarMonth_caption {
-  color: var(--text-primary);
-  font-weight: 700;
-  font-family: 'Menlo', 'Monaco', monospace;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
-  padding: 12px 0;
-}
-
-.date-picker .DayPickerNavigation_button {
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  border-radius: 3px;
+  padding: 12px 14px;
+  transition: all 0.25s ease;
   cursor: pointer;
-  transition: all 0.2s ease;
+  width: 100%;
 }
 
-.date-picker .DayPickerNavigation_button:hover {
-  background-color: rgba(0, 208, 132, 0.1);
-  border-color: var(--accent-green);
+input[type='date']:hover {
+  border-color: var(--border-med);
+  background-color: var(--tertiary-bg);
 }
 
-.date-picker .DayPickerNavigation_button__prev {
-  left: 12px;
+input[type='date']:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
+  background-color: var(--input-bg);
 }
 
-.date-picker .DayPickerNavigation_button__next {
-  right: 12px;
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.8) brightness(1.1);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
 }
 
-/* Hide week numbers and other unwanted elements */
-.date-picker .WeekNumber {
-  display: none !important;
+input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(1) brightness(1.3);
 }
 
-.date-picker .DayPicker_weekNumber {
-  display: none !important;
+#control-panel .date-range-wrapper {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
-.date-picker .DayPicker_weekHeader_ul li:first-child {
-  display: none !important;
-}
+/* =============================================================================
+   SLIDER STYLING
+   ============================================================================= */
 
-.date-picker .CalendarMonth_caption {
-  color: var(--text-primary);
-  font-weight: 700;
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 15px;
-  padding: 12px 0 20px 0;
-  margin: 0;
-}
-
-.date-picker .DayPicker_weekHeader {
-  margin-bottom: 8px;
-}
-
-.date-picker .DayPicker_weekHeader_ul li {
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 12px;
-  padding: 8px 0;
-}
-
-/* Clear button styling */
-.date-picker .DateRangePickerInput_clearDates {
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.date-picker .DateRangePickerInput_clearDates:hover {
-  color: var(--accent-green);
-}
-
-.date-picker .DateRangePickerInput_arrow {
-  color: var(--text-secondary);
-}
-
-/* Slider Styling */
 .rc-slider {
-  margin: 16px 0 28px 0;
+  margin: 18px 0 32px 0;
 }
 
 .rc-slider-track {
-  background: linear-gradient(90deg, var(--accent-green), #00e08f);
-  height: 4px;
+  background: var(--accent-primary);
+  height: 3px;
   border-radius: 2px;
-  box-shadow: 0 0 8px rgba(0, 208, 132, 0.2);
 }
 
 .rc-slider-rail {
-  background-color: rgba(42, 48, 80, 0.6);
-  height: 4px;
+  background-color: var(--border-light);
+  height: 3px;
   border-radius: 2px;
 }
 
 .rc-slider-handle {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, var(--accent-green), #00e08f);
-  border: 2px solid var(--primary-dark);
+  width: 14px;
+  height: 14px;
+  background: var(--accent-primary);
+  border: 2px solid var(--secondary-bg);
   border-radius: 50%;
-  top: -6px;
-  margin-left: -8px;
+  top: -5.5px;
+  margin-left: -7px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 208, 132, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 168, 107, 0.2);
 }
 
 .rc-slider-handle:hover {
-  box-shadow: 0 0 0 6px rgba(0, 208, 132, 0.25), 0 2px 12px rgba(0, 208, 132, 0.35);
-  transform: scale(1.15);
+  box-shadow: 0 2px 10px rgba(0, 168, 107, 0.4);
+  transform: scale(1.1);
 }
 
 .rc-slider-mark-text {
-  color: rgba(179, 179, 179, 0.7);
-  font-size: 10px;
-}
-
-/* Radio Items */
-.rc-radio-group {
-  display: flex;
-  gap: 18px;
-  margin: 14px 0 28px 0;
-}
-
-.rc-radio-wrapper {
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.rc-radio {
-  background-color: rgba(18, 24, 41, 0.6);
-  border-color: var(--border-color);
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.rc-radio:hover {
-  border-color: var(--accent-green);
-}
-
-.rc-radio-checked .rc-radio-inner {
-  background: linear-gradient(135deg, var(--accent-green), #00e08f);
-  border-color: var(--accent-green);
-  box-shadow: 0 0 8px rgba(0, 208, 132, 0.3);
+  color: var(--text-tertiary);
+  font-size: 11px;
 }
 
 /* =============================================================================
@@ -476,55 +280,38 @@ html, body {
 .run-button {
   width: 100%;
   padding: 13px 18px;
-  margin-top: 20px;
-  background: linear-gradient(135deg, var(--accent-green) 0%, #00c76e 100%);
-  color: var(--primary-dark);
+  margin-top: 24px;
+  background: var(--accent-primary);
+  color: var(--primary-bg);
   border: none;
   border-radius: 6px;
-  font-family: 'Menlo', 'Monaco', monospace;
-  font-size: 12px;
-  font-weight: 800;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 6px 20px rgba(0, 208, 132, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 168, 107, 0.2);
   position: relative;
   overflow: hidden;
 }
 
-.run-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.2);
-  transition: left 0.4s ease;
-}
-
-.run-button:hover::before {
-  left: 100%;
-}
-
 .run-button:hover {
-  background: linear-gradient(135deg, #00e08f 0%, #00d084 100%);
-  box-shadow: 0 8px 28px rgba(0, 208, 132, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transform: translateY(-3px);
+  background: #00945f;
+  box-shadow: 0 4px 12px rgba(0, 168, 107, 0.3);
+  transform: translateY(-2px);
 }
 
 .run-button:active {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 208, 132, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 168, 107, 0.2);
 }
 
 .run-button:disabled {
-  background: linear-gradient(135deg, var(--text-secondary) 0%, rgba(179, 179, 179, 0.7) 100%);
+  background: var(--text-tertiary);
   cursor: not-allowed;
-  box-shadow: none;
   opacity: 0.5;
-  transform: none;
 }
 
 .app-content {
@@ -545,19 +332,22 @@ html, body {
   width: 100%;
 }
 
+/* =============================================================================
+   RESULTS & SECTIONS
+   ============================================================================= */
+
 .results-section {
-  background: linear-gradient(135deg, rgba(26, 31, 58, 0.8), rgba(21, 26, 48, 0.6));
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
   padding: 28px;
-  box-shadow: 0 8px 32px rgba(0, 208, 132, 0.08), 0 4px 16px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
 }
 
 .results-section:hover {
-  border-color: rgba(0, 208, 132, 0.3);
-  box-shadow: 0 12px 40px rgba(0, 208, 132, 0.12), 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-med);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .section-header {
@@ -566,26 +356,24 @@ html, body {
   gap: 14px;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .section-header h3 {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   margin: 0;
-  color: var(--accent-green);
-  text-shadow: 0 0 8px rgba(0, 208, 132, 0.2);
+  color: var(--accent-primary);
 }
 
 .section-header .status-indicator {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-green), rgba(0, 208, 132, 0.5));
+  background: var(--accent-primary);
   animation: pulse 2s infinite;
-  box-shadow: 0 0 8px var(--accent-green);
 }
 
 @keyframes pulse {
@@ -594,7 +382,7 @@ html, body {
 }
 
 /* =============================================================================
-   PERFORMANCE METRICS
+   METRICS GRID
    ============================================================================= */
 
 .metrics-grid {
@@ -605,52 +393,46 @@ html, body {
 }
 
 .metric-card {
-  background: linear-gradient(135deg, rgba(18, 24, 41, 0.8), rgba(26, 31, 58, 0.6));
-  border: 1px solid var(--border-color);
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   padding: 20px;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(4px);
+  transition: all 0.25s ease;
 }
 
 .metric-card:hover {
-  border-color: var(--accent-green);
-  background: linear-gradient(135deg, rgba(0, 208, 132, 0.08), rgba(26, 31, 58, 0.8));
-  box-shadow: 0 0 16px rgba(0, 208, 132, 0.15), 0 4px 12px rgba(0, 0, 0, 0.2);
-  transform: translateY(-2px);
+  border-color: var(--accent-primary);
+  background: rgba(0, 168, 107, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 168, 107, 0.1);
 }
 
 .metric-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
   color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
 .metric-value {
   font-size: 26px;
-  font-weight: 800;
-  color: var(--accent-green);
-  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--accent-primary);
+  font-family: 'SF Mono', 'Monaco', monospace;
   letter-spacing: 0.5px;
-  text-shadow: 0 0 8px rgba(0, 208, 132, 0.2);
 }
 
 .metric-value.positive {
-  color: var(--accent-green);
-  text-shadow: 0 0 8px rgba(0, 208, 132, 0.3);
+  color: var(--success);
 }
 
 .metric-value.negative {
-  color: var(--accent-red);
-  text-shadow: 0 0 8px rgba(255, 77, 79, 0.2);
+  color: var(--danger);
 }
 
 .metric-value.neutral {
-  color: var(--accent-yellow);
-  text-shadow: 0 0 8px rgba(250, 173, 20, 0.2);
+  color: var(--accent-secondary);
 }
 
 .metric-change {
@@ -664,9 +446,9 @@ html, body {
    ============================================================================= */
 
 .chart-container {
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  background-color: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
   min-height: 400px;
@@ -674,13 +456,13 @@ html, body {
 
 .chart-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--accent-green);
+  color: var(--accent-primary);
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
 }
 
 /* =============================================================================
@@ -690,36 +472,34 @@ html, body {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: linear-gradient(135deg, rgba(18, 24, 41, 0.6), rgba(26, 31, 58, 0.4));
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
   overflow: hidden;
-  backdrop-filter: blur(4px);
 }
 
 table th {
-  background: linear-gradient(90deg, rgba(0, 208, 132, 0.15), rgba(0, 208, 132, 0.05));
-  border-bottom: 2px solid var(--accent-green);
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-light);
   padding: 14px 16px;
   text-align: left;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--accent-green);
-  text-shadow: 0 0 6px rgba(0, 208, 132, 0.15);
+  letter-spacing: 0.8px;
+  color: var(--accent-primary);
 }
 
 table td {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(42, 48, 80, 0.5);
-  font-size: 12px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
   color: var(--text-primary);
-  font-family: 'Courier New', monospace;
+  font-family: 'SF Mono', 'Monaco', monospace;
 }
 
 table tbody tr:hover {
-  background-color: rgba(0, 208, 132, 0.08);
+  background-color: var(--hover-bg);
 }
 
 table tbody tr:last-child td {
@@ -731,26 +511,24 @@ table tbody tr:last-child td {
    ============================================================================= */
 
 .summary-container {
-  background: linear-gradient(135deg, rgba(18, 24, 41, 0.8), rgba(26, 31, 58, 0.6));
-  border: 1px solid var(--border-color);
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   padding: 24px;
   font-size: 13px;
-  line-height: 1.9;
+  line-height: 1.8;
   color: var(--text-secondary);
-  font-family: 'Courier New', monospace;
+  font-family: 'SF Mono', 'Monaco', monospace;
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 600px;
   overflow-y: auto;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 0 16px rgba(0, 208, 132, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .summary-label {
-  color: var(--accent-green);
-  font-weight: 800;
-  text-shadow: 0 0 4px rgba(0, 208, 132, 0.2);
+  color: var(--accent-primary);
+  font-weight: 600;
 }
 
 .summary-value {
@@ -759,13 +537,13 @@ table tbody tr:last-child td {
 }
 
 .summary-error {
-  color: var(--accent-red);
-  font-weight: 700;
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .summary-warning {
-  color: var(--accent-yellow);
-  font-weight: 700;
+  color: var(--warning);
+  font-weight: 600;
 }
 
 /* =============================================================================
@@ -780,9 +558,9 @@ table tbody tr:last-child td {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--border-light);
   border-radius: 50%;
-  border-top-color: var(--accent-green);
+  border-top-color: var(--accent-primary);
   animation: spin 0.8s linear infinite;
 }
 
@@ -792,22 +570,22 @@ table tbody tr:last-child td {
 
 .status-message {
   padding: 12px 16px;
-  background-color: var(--input-bg);
-  border-left: 3px solid var(--accent-green);
-  border-radius: 2px;
+  background-color: var(--tertiary-bg);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 4px;
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 16px;
 }
 
 .status-message.warning {
-  border-left-color: var(--accent-yellow);
-  color: var(--accent-yellow);
+  border-left-color: var(--warning);
+  color: var(--warning);
 }
 
 .status-message.error {
-  border-left-color: var(--accent-red);
-  color: var(--accent-red);
+  border-left-color: var(--danger);
+  color: var(--danger);
 }
 
 /* =============================================================================
@@ -820,16 +598,16 @@ table tbody tr:last-child td {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--secondary-dark);
+  background-color: var(--primary-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
+  background-color: var(--border-med);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--accent-green);
+  background-color: var(--accent-primary);
 }
 
 /* =============================================================================
@@ -838,17 +616,17 @@ table tbody tr:last-child td {
 
 @media (max-width: 1600px) {
   #control-panel {
-    width: 300px !important;
+    width: 340px !important;
   }
 }
 
 @media (max-width: 1200px) {
   #main-container {
-    padding: 20px !important;
+    padding: 32px 40px !important;
   }
   
   #control-panel {
-    width: 280px !important;
+    width: 320px !important;
     position: static;
     max-height: none;
   }
@@ -860,12 +638,12 @@ table tbody tr:last-child td {
 
 @media (max-width: 768px) {
   #main-container {
-    padding: 12px !important;
+    padding: 20px !important;
   }
   
   #main-container h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 28px;
+    margin-bottom: 30px;
   }
   
   #control-panel {
@@ -879,11 +657,16 @@ table tbody tr:last-child td {
   }
   
   table {
-    font-size: 11px;
+    font-size: 12px;
   }
   
   table th, table td {
     padding: 8px;
+  }
+  
+  .app-content {
+    flex-direction: column;
+    gap: 20px;
   }
 }
 
@@ -906,73 +689,12 @@ table tbody tr:last-child td {
 }
 
 .plotly text {
-  font-family: 'Menlo', 'Monaco', monospace !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
   color: var(--text-secondary) !important;
 }
 
-/* Heatmap text styling */
 .hovertext {
-  font-family: 'Menlo', 'Monaco', monospace !important;
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  color: var(--accent-green) !important;
-}
-#control-panel .date-picker {
-    width: 100%;
-    box-sizing: border-box; /* Ensure padding doesn't expand width */
-    margin-bottom: 15px;
-}
-
-#control-panel label {
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #555;
-}
-
-.run-button {
-    width: 100%;
-    padding: 10px;
-    font-size: 1em;
-    font-weight: bold;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 10px;
-}
-
-.run-button:hover {
-    background-color: #0056b3;
-}
-
-/* Results Area */
-#results-output {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-width: 0; /* Prevents flexbox overflow issues */
-}
-
-.summary-container {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.summary-container .markdown {
-    white-space: pre-wrap;
-    font-family: "Courier New", Courier, monospace;
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #dee2e6;
-    font-size: 0.9em; /* Smaller mono font */
-}
-
-/* Ensure graphs are responsive */
-.dash-graph {
-    width: 100%;
+  font-family: 'SF Mono', 'Monaco', monospace !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  color: var(--accent-primary) !important;
 }
