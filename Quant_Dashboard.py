@@ -279,6 +279,140 @@ def fetch_news_sentiment(date: datetime):
     except:
         return 0.0
 
+# =============================================================================
+# Risk Parity Analysis
+# =============================================================================
+def compute_risk_parity_weights(returns_df):
+    """
+    Compute risk parity weights for factors/assets.
+    Risk parity allocates inversely proportional to volatility.
+    """
+    try:
+        volatilities = returns_df.std()
+        if volatilities.sum() == 0:
+            return pd.Series(1/len(returns_df), index=returns_df.columns)
+        
+        # Inverse volatility weighting
+        inv_vol = 1.0 / (volatilities + 1e-8)
+        weights = inv_vol / inv_vol.sum()
+        return weights
+    except Exception as e:
+        print(f"Error computing risk parity weights: {e}")
+        return pd.Series(1/len(returns_df), index=returns_df.columns)
+
+def analyze_risk_parity(data, returns_col='Returns'):
+    """
+    Analyze portfolio risk contribution by factor.
+    Returns risk parity metrics and factor contributions.
+    """
+    try:
+        # Compute daily returns for each factor
+        factor_cols = ['MA20', 'MA50', 'RSI', 'Volatility', 'MACD', 'BB_Position', 'ATR', 'ADX']
+        available_factors = [col for col in factor_cols if col in data.columns]
+        
+        if not available_factors:
+            return None
+        
+        # Calculate factor volatility directly (more meaningful than normalized returns)
+        factor_vols = {}
+        factor_returns_df = pd.DataFrame()
+        
+        for col in available_factors:
+            col_data = data[col].dropna()
+            if len(col_data) > 1:
+                # Use raw returns/changes
+                col_returns = col_data.pct_change().fillna(0)
+                factor_returns_df[col] = col_returns
+                factor_vols[col] = col_returns.std()
+        
+        # Compute risk parity weights based on inverse volatility
+        vol_array = np.array([factor_vols.get(col, 1e-8) for col in available_factors])
+        inv_vol = 1.0 / (vol_array + 1e-8)
+        rp_weights = inv_vol / inv_vol.sum()
+        rp_weights_series = pd.Series(rp_weights, index=available_factors)
+        
+        # Compute portfolio returns using risk parity weights
+        portfolio_returns = (factor_returns_df * rp_weights).sum(axis=1)
+        
+        # Risk metrics
+        portfolio_vol = portfolio_returns.std()
+        cumulative_return = (1 + portfolio_returns).cumprod()
+        
+        # Factor risk contributions - use volatility as primary metric
+        factor_contributions = {col: factor_vols.get(col, 0) for col in available_factors}
+        
+        return {
+            'weights': rp_weights_series,
+            'factor_returns': factor_returns_df,
+            'portfolio_returns': portfolio_returns,
+            'portfolio_vol': portfolio_vol,
+            'factor_contributions': factor_contributions,
+            'cumulative_return': cumulative_return,
+            'factor_vols': factor_vols
+        }
+    except Exception as e:
+        print(f"Error in risk parity analysis: {e}")
+        return None
+
+# =============================================================================
+# Factor Attribution Analysis
+# =============================================================================
+def compute_factor_attribution(data, returns_col='Returns'):
+    """
+    Perform factor attribution analysis to explain returns.
+    Identifies which factors contributed most to strategy returns.
+    """
+    try:
+        factor_cols = ['MA20', 'MA50', 'RSI', 'Volatility', 'VolumePct', 'MACD', 
+                       'BB_Position', 'ATR', 'ADX', 'Sentiment']
+        available_factors = [col for col in factor_cols if col in data.columns]
+        
+        if not available_factors or returns_col not in data.columns:
+            return None
+        
+        # Prepare data
+        X_factors = data[available_factors].fillna(0)
+        y_returns = data[returns_col].fillna(0)
+        
+        # Normalize factors to same scale
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        X_factors_scaled = scaler.fit_transform(X_factors)
+        X_factors_scaled = pd.DataFrame(X_factors_scaled, columns=available_factors, index=data.index)
+        
+        # Calculate correlation with returns
+        correlations = {}
+        for col in available_factors:
+            corr = X_factors_scaled[col].corr(y_returns)
+            correlations[col] = corr
+        
+        # Calculate impact: rolling window contribution
+        window = min(20, len(data) // 4)
+        factor_impacts = {}
+        
+        for col in available_factors:
+            rolling_corr = X_factors_scaled[col].rolling(window).corr(y_returns)
+            average_impact = rolling_corr.mean()
+            max_impact = rolling_corr.max()
+            factor_impacts[col] = {
+                'avg_impact': average_impact,
+                'max_impact': max_impact,
+                'correlation': correlations[col]
+            }
+        
+        # Sort by absolute correlation
+        sorted_factors = sorted(correlations.items(), key=lambda x: abs(x[1]), reverse=True)
+        
+        return {
+            'factor_correlations': correlations,
+            'factor_impacts': factor_impacts,
+            'sorted_factors': sorted_factors,
+            'top_3_factors': sorted_factors[:3]
+        }
+    except Exception as e:
+        print(f"Error in factor attribution: {e}")
+        return None
+
 # --- THIS IS THE CORRECTED FUNCTION ---
 def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
     # I'm making a copy to avoid any SettingWithCopyWarnings
@@ -706,6 +840,96 @@ Avg Position Size:         {data[data['PnL'] != 0]['PositionSize'].mean():.2%}
             ]),
         ])
 
+        # Compute Risk Parity and Factor Attribution Analysis
+        rp_analysis = analyze_risk_parity(data)
+        factor_attr = compute_factor_attribution(data)
+        
+        # Risk Parity Visualization
+        rp_viz_div = html.Div()
+        if rp_analysis:
+            rp_weights = rp_analysis['weights']
+            
+            # Sort weights for better visualization
+            rp_weights_sorted = rp_weights.sort_values(ascending=False)
+            fig_rp = go.Figure(data=[go.Bar(
+                x=rp_weights_sorted.index, 
+                y=rp_weights_sorted.values,
+                marker_color='steelblue',
+                text=[f'{v:.4f}' for v in rp_weights_sorted.values],
+                textposition='auto'
+            )])
+            fig_rp.update_layout(
+                title='Risk Parity Factor Weights (Inverse Volatility)',
+                xaxis_title='Factor',
+                yaxis_title='Weight',
+                height=400
+            )
+            
+            # Factor volatility pie chart
+            factor_vols = rp_analysis.get('factor_vols', {})
+            if factor_vols:
+                # Filter out very small volatilities
+                sig_vols = {k: v for k, v in factor_vols.items() if v > 1e-8}
+                if sig_vols:
+                    fig_contrib = go.Figure(data=[go.Pie(
+                        labels=list(sig_vols.keys()),
+                        values=list(sig_vols.values()),
+                        marker=dict(colors=px.colors.sequential.Viridis),
+                        textposition='inside',
+                        textinfo='label+percent'
+                    )])
+                    fig_contrib.update_layout(
+                        title='Factor Volatility Contribution to Risk',
+                        height=400
+                    )
+                else:
+                    # All volatilities too small - show equal distribution
+                    fig_contrib = go.Figure(data=[go.Pie(
+                        labels=list(factor_vols.keys()),
+                        values=[1]*len(factor_vols),
+                        marker=dict(colors=px.colors.sequential.Viridis),
+                        textposition='inside',
+                        textinfo='label+percent'
+                    )])
+                    fig_contrib.update_layout(
+                        title='Equal Risk Distribution',
+                        height=400
+                    )
+            else:
+                fig_contrib = go.Figure().add_annotation(text="No volatility data available")
+            
+            rp_viz_div = html.Div([
+                dcc.Graph(figure=fig_rp),
+                dcc.Graph(figure=fig_contrib)
+            ], style={'display': 'grid', 'gridTemplateColumns': '1fr 1fr', 'gap': '24px'})
+        
+        # Factor Attribution Visualization
+        factor_attr_div = html.Div()
+        if factor_attr:
+            correlations = factor_attr['factor_correlations']
+            sorted_factors = factor_attr['sorted_factors']
+            
+            # Bar chart of factor correlations
+            fig_corr = go.Figure(data=[go.Bar(
+                x=[f[0] for f in sorted_factors],
+                y=[f[1] for f in sorted_factors],
+                marker_color=['green' if f[1] > 0 else 'red' for f in sorted_factors]
+            )])
+            fig_corr.update_layout(title='Factor Correlation with Strategy Returns', xaxis_title='Factor', yaxis_title='Correlation')
+            
+            # Top 3 factors text
+            top_3_text = "Top Factors Contributing to Returns:\n"
+            for i, (factor, corr) in enumerate(factor_attr['top_3_factors'][:3], 1):
+                impact_info = factor_attr['factor_impacts'].get(factor, {})
+                top_3_text += f"\n{i}. {factor}: {corr:.3f} correlation"
+                if 'avg_impact' in impact_info:
+                    top_3_text += f" (avg impact: {impact_info['avg_impact']:.4f})"
+            
+            factor_attr_div = html.Div([
+                dcc.Graph(figure=fig_corr),
+                html.Pre(top_3_text, style={'backgroundColor': '#f0f0f0', 'padding': '12px', 'borderRadius': '4px', 'fontSize': '12px'})
+            ])
+
         # Build main results container
         results_sections = [
             html.Div(className='results-section', children=[
@@ -734,6 +958,28 @@ Avg Position Size:         {data[data['PnL'] != 0]['PositionSize'].mean():.2%}
                 dcc.Graph(figure=fig_returns)
             ]),
         ]
+        
+        # Add Risk Parity Analysis Section
+        if rp_analysis:
+            results_sections.append(
+                html.Div(className='results-section', children=[
+                    html.Div(className='section-header', children=[
+                        html.H3('Risk Parity Analysis')
+                    ]),
+                    rp_viz_div
+                ])
+            )
+        
+        # Add Factor Attribution Section
+        if factor_attr:
+            results_sections.append(
+                html.Div(className='results-section', children=[
+                    html.Div(className='section-header', children=[
+                        html.H3('Factor Attribution Analysis')
+                    ]),
+                    factor_attr_div
+                ])
+            )
         
         # Add confusion matrix and ROC if available
         if cm is not None or roc_auc is not None:
