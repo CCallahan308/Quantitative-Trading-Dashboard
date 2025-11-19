@@ -256,8 +256,10 @@ input[type='date']::-webkit-calendar-picker-indicator:hover {
   background: var(--accent-primary);
   border: 2px solid var(--secondary-bg);
   border-radius: 50%;
-  top: -5.5px;
-  margin-left: -7px;
+  /* center the handle precisely regardless of border size */
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin-left: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 168, 107, 0.2);
@@ -265,7 +267,7 @@ input[type='date']::-webkit-calendar-picker-indicator:hover {
 
 .rc-slider-handle:hover {
   box-shadow: 0 2px 10px rgba(0, 168, 107, 0.4);
-  transform: scale(1.1);
+  transform: translate(-50%, -50%) scale(1.06);
 }
 
 .rc-slider-mark-text {

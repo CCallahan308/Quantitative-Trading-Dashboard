@@ -55,8 +55,7 @@ def fetch_stock_data(symbol, start_date, end_date, retries=3):
                 progress=False,
                 auto_adjust=True,
                 prepost=False,
-                threads=True,
-                proxy=None
+                threads=True
             )
             
             if data is not None and not data.empty and len(data) > 0:
@@ -148,26 +147,32 @@ def build_control_panel():
         html.Label("Starting Capital"),
         dcc.Input(id='input-capital', type='number', value=100000, className='input-field'),
         
-        html.Label("Long Signal Confidence"),
-        dcc.Slider(id='slider-min-confidence', min=0.5, max=1.0, step=0.05, value=0.75, marks={i/10:str(i/10) for i in range(5, 11)}),
+        html.Label("Long Signal Confidence (%)"),
+        dcc.Input(id='slider-min-confidence', type='number', value=75, min=50, max=100, step=1, className='input-field'),
+        html.Div("Enter integer percent (50-100). Converted to 0-1 internally.", className='input-hint'),
         
-        html.Label("Short Signal Confidence"),
-        dcc.Slider(id='slider-max-confidence', min=0.0, max=0.5, step=0.05, value=0.25, marks={i/10:str(i/10) for i in range(0, 6)}),
+        html.Label("Short Signal Confidence (%)"),
+        dcc.Input(id='slider-max-confidence', type='number', value=25, min=0, max=50, step=1, className='input-field'),
+        html.Div("Enter integer percent (0-50). Converted to 0-1 internally.", className='input-hint'),
         
         html.Label("Stop-Loss Threshold (%)"),
-        dcc.Slider(id='slider-loss-threshold', min=1, max=10, step=0.5, value=5, marks={i:f'{i}%' for i in range(1, 11)}),
+        dcc.Input(id='slider-loss-threshold', type='number', value=5, min=1, max=10, step=0.5, className='input-field'),
+        html.Div("Enter percent (1-10). Converted to 0-0.1 internally.", className='input-hint'),
         
-        html.Label("Trailing Stop Volatility Scale"),
-        dcc.Slider(id='slider-trail-vol-scale', min=0, max=0.2, step=0.01, value=0.05, marks={i/100:str(i/100) for i in range(0, 21, 5)}),
+        html.Label("Trailing Stop Volatility Scale (%)"),
+        dcc.Input(id='slider-trail-vol-scale', type='number', value=5, min=0, max=20, step=0.5, className='input-field'),
+        html.Div("Enter percent (0-20). Converted to 0-0.2 internally.", className='input-hint'),
         
         html.Label("XGBoost Trees (n_estimators)"),
         dcc.Input(id='input-n-estimators', type='number', value=500, min=50, max=2000, step=50, className='input-field'),
 
         html.Label("Train Split (%)"),
-        dcc.Slider(id='slider-train-pct', min=50, max=90, step=1, value=65, marks={i:str(i) for i in range(50, 91, 10)}),
+        dcc.Input(id='slider-train-pct', type='number', value=65, min=50, max=90, step=1, className='input-field'),
+        html.Div("Enter integer percent (50-90). Must be < 100% when combined with validation.", className='input-hint'),
 
         html.Label("Validation Split (%)"),
-        dcc.Slider(id='slider-val-pct', min=5, max=30, step=1, value=15, marks={i:str(i) for i in range(5, 31, 5)}),
+        dcc.Input(id='slider-val-pct', type='number', value=15, min=1, max=49, step=1, className='input-field'),
+        html.Div("Enter integer percent (1-49). Must be < 100% when combined with training.", className='input-hint'),
 
         html.Div(id='split-warning', style={'color': 'darkred', 'fontWeight': 'bold', 'marginTop': '6px'}),
 
@@ -202,7 +207,8 @@ app.layout = html.Div(id='main-container', style={'width': '100%', 'padding': '2
     html.Div(style={'display': 'flex', 'gap': '30px', 'width': '100%'}, children=[
         build_control_panel(),
         dcc.Loading(id="loading-spinner", type="default", children=html.Div(id='results-output', style={'flex': '1', 'width': '90%', 'minWidth': '1200px'}))
-    ])
+    ]),
+    html.Div(id='run-backtest-loading-output', style={'display': 'none'})
 ])
 
 # =============================================================================
@@ -374,7 +380,8 @@ def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
     return df
 
 @app.callback(
-    Output('results-output', 'children'),
+    [Output('results-output', 'children'),
+     Output('run-backtest-loading-output', 'children')],
     Input('run-button', 'n_clicks'),
     [State('input-symbol', 'value'),
      State('input-start-date', 'value'),
@@ -391,10 +398,13 @@ def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
 )
 def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence_long, max_confidence_short, loss_threshold_pct, trail_vol_scale, n_estimators, train_pct, val_pct, early_stopping_rounds):
     if n_clicks == 0:
-        return html.Div("Set parameters and click 'Run Backtest' to start.", style={'textAlign': 'center', 'marginTop': '50px'})
+        return html.Div("Set parameters and click 'Run Backtest' to start.", style={'textAlign': 'center', 'marginTop': '50px'}), ''
 
     try:
         loss_threshold = loss_threshold_pct / 100.0
+        trail_vol_scale_val = trail_vol_scale / 100.0
+        min_confidence = min_confidence_long / 100.0
+        max_confidence = max_confidence_short / 100.0
         
         # 1. Fetch & Feature Engineering
         data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
@@ -413,7 +423,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
                     html.Br(),
                     "Please try again in a few minutes, or try a different symbol like 'AAPL' or 'MSFT'."
                 ])
-            ], style={'textAlign': 'center', 'padding': '20px'})
+            ], style={'textAlign': 'center', 'padding': '20px'}), ''
 
         # Flatten MultiIndex columns if they exist (yfinance downloads can have MultiIndex columns)
         if isinstance(data.columns, pd.MultiIndex):
@@ -458,7 +468,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
         data = data.dropna().copy()
 
         if len(data) < 100: # Need enough data for features and training
-             return html.Div("Not enough data to run the backtest. Please select a wider date range.", style={'color': 'red', 'textAlign': 'center'})
+            return html.Div("Not enough data to run the backtest. Please select a wider date range.", style={'color': 'red', 'textAlign': 'center'}), ''
 
         # 2. Machine Learning with improved features and walk-forward validation
         features = ['MA20', 'MA50', 'RSI', 'Volatility', 'VolumePct', 'Sentiment', 
@@ -477,7 +487,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
             val_pct_val = 15
 
         if train_pct_val + val_pct_val >= 100:
-            return html.Div("Invalid split: train + validation must be less than 100%.", style={'color': 'red', 'textAlign': 'center'})
+            return html.Div("Invalid split: train + validation must be less than 100%.", style={'color': 'red', 'textAlign': 'center'}), ''
 
         test_pct_val = 100 - train_pct_val - val_pct_val
         train_size = int(len(X) * (train_pct_val / 100.0))
@@ -544,11 +554,11 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
 
         y_proba = model_xgb.predict_proba(X)[:, 1]
         data['Confidence'] = pd.Series(y_proba, index=data.index)
-        data['Signal'] = np.where(data['Confidence'] > min_confidence_long, 1, np.where(data['Confidence'] < max_confidence_short, -1, 0))
+        data['Signal'] = np.where(data['Confidence'] > min_confidence, 1, np.where(data['Confidence'] < max_confidence, -1, 0))
         data['Signal'] = data['Signal'].shift(1)
 
         # 3. Backtest
-        data = simulate_risk_aware_backtest(data, loss_threshold, trail_vol_scale)
+        data = simulate_risk_aware_backtest(data, loss_threshold, trail_vol_scale_val)
         data['Returns'] = data['PnL'] * data['PositionSize']
         data['Cumulative Returns'] = (1 + data['Returns']).cumprod() * capital
 
@@ -745,7 +755,7 @@ Avg Position Size:         {data[data['PnL'] != 0]['PositionSize'].mean():.2%}
             run_saved_note
         ]))
 
-        return html.Div(results_sections, style={'width': '100%'})
+        return html.Div(results_sections, style={'width': '100%'}), ''
     except Exception as e:
         # I'm importing 'traceback' to give a more detailed error message
         import traceback
@@ -753,7 +763,7 @@ Avg Position Size:         {data[data['PnL'] != 0]['PositionSize'].mean():.2%}
             html.H4("An error occurred:", style={'color': 'red'}),
             # This will print the full error stack, which is more helpful for debugging
             html.Pre(f"{traceback.format_exc()}", style={'border': '1px solid #ddd', 'padding': '10px', 'overflowX': 'auto'})
-        ])
+        ]), ''
 
 
 @app.callback(
