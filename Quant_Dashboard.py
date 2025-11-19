@@ -8,6 +8,16 @@ import plotly.graph_objects as go
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_report
+from sklearn.preprocessing import StandardScaler
+
+# Bayesian Optimization
+try:
+    from skopt import gp_minimize, space
+    from skopt.utils import use_named_args
+    BAYESIAN_OPT_AVAILABLE = True
+except ImportError:
+    BAYESIAN_OPT_AVAILABLE = False
+    print("Warning: scikit-optimize not installed. Bayesian optimization disabled. Install with: pip install scikit-optimize")
 
 # Fix for yfinance API issues - configure session with proper headers
 import requests
@@ -179,8 +189,17 @@ def build_control_panel():
         html.Label("Early Stopping Rounds (0 to disable)"),
         dcc.Input(id='input-early-stopping', type='number', value=50, min=0, step=10, className='input-field'),
         
-        html.Button('Run Backtest', id='run-button', n_clicks=0, className='run-button')
-        ,
+        html.Button('Run Backtest', id='run-button', n_clicks=0, className='run-button'),
+        
+        html.Hr(),
+        html.H5('Bayesian Hyperparameter Optimization'),
+        html.Label('Number of Optimization Iterations'),
+        dcc.Input(id='bayes-n-calls', type='number', value=10, min=3, max=30, step=1, className='input-field'),
+        html.Div('Optimizes: min_confidence, max_confidence, loss_threshold, n_estimators', className='input-hint'),
+        html.Button('Start Bayesian Optimization', id='bayes-opt-button', n_clicks=0, className='run-button'),
+        html.Div(id='bayes-progress', style={'marginTop':'8px', 'fontWeight':'bold'}),
+        html.Div(id='bayes-results', style={'marginTop':'12px', 'padding':'8px', 'border':'1px solid #ccc', 'borderRadius':'4px', 'fontSize':'12px'}),
+        
         html.Hr(),
         html.H5('Experiment Runner'),
         html.Label('n_estimators (comma-separated)'),
@@ -411,6 +430,91 @@ def compute_factor_attribution(data, returns_col='Returns'):
         }
     except Exception as e:
         print(f"Error in factor attribution: {e}")
+        return None
+
+# =============================================================================
+# Bayesian Hyperparameter Optimization
+# =============================================================================
+def bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=15):
+    """
+    Use Bayesian optimization to find optimal strategy hyperparameters.
+    Optimizes: min_confidence, max_confidence, loss_threshold, n_estimators
+    """
+    if not BAYESIAN_OPT_AVAILABLE:
+        print("Bayesian optimization not available. Install scikit-optimize: pip install scikit-optimize")
+        return None
+    
+    try:
+        from skopt import gp_minimize, space
+        from skopt.utils import use_named_args
+        
+        # Define search space
+        search_space = [
+            space.Real(0.60, 0.95, name='min_confidence'),      # Long signal confidence
+            space.Real(0.05, 0.40, name='max_confidence'),      # Short signal confidence  
+            space.Real(0.01, 0.10, name='loss_threshold'),      # Stop loss
+            space.Integer(100, 1000, name='n_estimators'),      # XGBoost trees
+        ]
+        
+        # Objective function to minimize (negative Sharpe ratio)
+        @use_named_args(search_space)
+        def objective(**params):
+            try:
+                min_conf = params['min_confidence']
+                max_conf = params['max_confidence']
+                loss_thresh = params['loss_threshold']
+                n_est = params['n_estimators']
+                
+                # Train model
+                model = xgb.XGBClassifier(
+                    n_estimators=n_est,
+                    learning_rate=0.05,
+                    max_depth=7,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    gamma=0.5,
+                    random_state=42,
+                    eval_metric='logloss'
+                )
+                model.fit(X_train, y_train, verbose=0)
+                
+                # Generate signals
+                y_proba = model.predict_proba(X_test)[:, 1]
+                signals = np.where(y_proba > min_conf, 1, np.where(y_proba < max_conf, -1, 0))
+                
+                # Calculate returns
+                returns = data.loc[X_test.index, 'Returns'].values if 'Returns' in data.columns else y_test.values * 0.01
+                strategy_returns = returns * signals
+                
+                # Calculate Sharpe ratio
+                if len(strategy_returns) > 1:
+                    sharpe = np.mean(strategy_returns) / (np.std(strategy_returns) + 1e-8) * np.sqrt(252)
+                    # Return negative because we want to maximize
+                    return -sharpe
+                else:
+                    return 0
+                    
+            except Exception as e:
+                print(f"Error in objective function: {e}")
+                return 0
+        
+        # Run Bayesian optimization
+        print(f"Starting Bayesian Optimization with {n_calls} iterations...")
+        result = gp_minimize(objective, search_space, n_calls=min(n_calls, 10), random_state=42, n_initial_points=3)
+        
+        # Extract best parameters
+        best_params = {
+            'min_confidence': result.x[0],
+            'max_confidence': result.x[1],
+            'loss_threshold': result.x[2],
+            'n_estimators': result.x[3],
+            'best_score': -result.fun  # Negate back to get Sharpe ratio
+        }
+        
+        return best_params
+        
+    except Exception as e:
+        print(f"Error in Bayesian optimization: {e}")
         return None
 
 # --- THIS IS THE CORRECTED FUNCTION ---
@@ -1229,6 +1333,80 @@ def poll_exp_progress(_):
             return exp_status['progress']
         else:
             return exp_status['progress']
+
+
+@app.callback(
+    [Output('bayes-progress', 'children'), Output('bayes-results', 'children')],
+    Input('bayes-opt-button', 'n_clicks'),
+    [State('input-symbol', 'value'),
+     State('input-start-date', 'value'),
+     State('input-end-date', 'value'),
+     State('slider-train-pct', 'value'),
+     State('slider-val-pct', 'value'),
+     State('bayes-n-calls', 'value')]
+)
+def run_bayesian_optimization(n_clicks, symbol, start_date, end_date, train_pct, val_pct, n_calls):
+    if not n_clicks or not BAYESIAN_OPT_AVAILABLE:
+        return '', ''
+    
+    try:
+        # Fetch data
+        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
+        if data is None or data.empty:
+            return 'Error fetching data', ''
+        
+        # Feature engineering (simplified)
+        data['MA20'] = data['Close'].rolling(window=20).mean()
+        data['MA50'] = data['Close'].rolling(window=50).mean()
+        data['RSI'] = compute_rsi(data['Close'])
+        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(252)
+        data['MACD'], data['MACD_Signal'], data['MACD_Histogram'] = compute_macd(data['Close'])
+        data['Return'] = data['Close'].pct_change()
+        data['Target'] = np.where(data['Return'].shift(-1) > 0, 1, 0)
+        
+        data = data.dropna().copy()
+        
+        if len(data) < 100:
+            return 'Not enough data', ''
+        
+        # Prepare train/test split
+        features = ['MA20', 'MA50', 'RSI', 'Volatility', 'MACD']
+        X, y = data[features], data['Target']
+        
+        train_pct_val = int(train_pct) if train_pct else 65
+        val_pct_val = int(val_pct) if val_pct else 15
+        
+        train_size = int(len(X) * (train_pct_val / 100.0))
+        test_size = int(len(X) * ((100 - train_pct_val - val_pct_val) / 100.0))
+        
+        X_train, y_train = X[:train_size], y[:train_size]
+        X_test, y_test = X[train_size:train_size+test_size], y[train_size:train_size+test_size]
+        
+        # Run Bayesian optimization
+        best_params = bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=n_calls)
+        
+        if best_params:
+            results_text = f"""
+✓ Bayesian Optimization Complete!
+
+Best Parameters Found:
+  • Min Confidence: {best_params['min_confidence']:.3f}
+  • Max Confidence: {best_params['max_confidence']:.3f}
+  • Loss Threshold: {best_params['loss_threshold']:.4f}
+  • XGBoost Trees: {int(best_params['n_estimators'])}
+  
+Expected Sharpe Ratio: {best_params['best_score']:.3f}
+
+Tip: Copy these values to the main backtest parameters above!
+            """
+            return '✓ Optimization Complete', results_text
+        else:
+            return '✗ Optimization Failed', 'Check console for errors. Is scikit-optimize installed?'
+            
+    except Exception as e:
+        print(f"Error in Bayesian optimization: {e}")
+        return f'✗ Error: {str(e)}', ''
+
 
 if __name__ == '__main__':
     app.run(debug=False, host='127.0.0.1', port=8050)
