@@ -293,8 +293,8 @@ else:
 - [ ] Live trading integration (Interactive Brokers, Alpaca)
 - [ ] Multi-asset portfolio support
 - [ ] Advanced order types (bracket orders, OCO)
-- [ ] Bayesian hyperparameter optimization
-- [ ] Risk parity and factor attribution analysis
+- [ x ] Bayesian hyperparameter optimization
+- [ x ] Risk parity and factor attribution analysis
 
 ## 📝 License
 
