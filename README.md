@@ -11,7 +11,8 @@ A professional-grade quantitative trading backtesting framework with interactive
 ### Core Backtesting Engine
 - **Risk-Aware Simulation**: Dynamic position sizing with stop-loss and trailing stops
 - **Walk-Forward Validation**: Robust 65/20/15 train/test/validation split methodology
-- **High-Fidelity Execution**: Realistic slippage and commission modeling with daily OHLCV data
+- **High-Fidelity Execution**: Realistic slippage and commission modeling with daily and intraday OHLCV data
+- **Intraday Support**: Trade on 5-minute, 15-minute, hourly, or daily bars
 
 ### Machine Learning
 - **XGBoost Classifier**: Production-grade gradient boosting with 500+ decision trees
@@ -225,7 +226,13 @@ Results include:
 
 - **Market Data**: [yfinance](https://finance.yahoo.com/quote/) (Yahoo Finance)
 - **Sentiment Data**: [NewsAPI](https://newsapi.org/) or [TextBlob](https://textblob.readthedocs.io/)
-- **Frequency**: Daily OHLCV bars
+- **Frequency**: Daily and intraday OHLCV bars
+  - **Daily**: 1 day bars (default)
+  - **Hourly**: 1 hour bars
+  - **15-Minute**: 15-minute bars
+  - **5-Minute**: 5-minute bars
+
+**Note**: Intraday data availability is limited by Yahoo Finance API. Historical intraday data is typically available for the last 60-730 days depending on the interval and symbol.
 
 ## ⚙️ Technical Stack
 
@@ -286,10 +293,11 @@ else:
 3. **Monitor Drawdowns**: Keep trailing stop scale reasonable (0.05-0.10)
 4. **Iterate**: Use experiment runner to find optimal hyperparameters
 5. **Document**: Save runs/ results for reproducibility and analysis
+6. **Intraday Trading**: When using intraday intervals (5m, 15m, 1h), use shorter date ranges due to API limitations (typically 7-60 days)
 
 ## 🚀 Future Enhancements
 
-- [ ] Support for intraday data (5min, 15min, 1hour bars)
+- [x] Support for intraday data (5min, 15min, 1hour bars) ✅ **COMPLETED**
 - [ ] Live trading integration (Interactive Brokers, Alpaca)
 - [ ] Multi-asset portfolio support
 - [ ] Advanced order types (bracket orders, OCO)

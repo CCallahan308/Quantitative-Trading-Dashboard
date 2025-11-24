@@ -36,9 +36,16 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # =============================================================================
 # Robust Data Fetching Function with Fallbacks
 # =============================================================================
-def fetch_stock_data(symbol, start_date, end_date, retries=3):
+def fetch_stock_data(symbol, start_date, end_date, interval='1d', retries=3):
     """
     Fetch stock data with multiple fallback methods to handle API issues.
+    
+    Args:
+        symbol: Stock symbol (e.g., 'SPY')
+        start_date: Start date for data
+        end_date: End date for data
+        interval: Data interval - '1d', '1h', '15m', '5m' (default: '1d')
+        retries: Number of retry attempts (default: 3)
     """
     import time
     
@@ -61,7 +68,7 @@ def fetch_stock_data(symbol, start_date, end_date, retries=3):
                 symbol, 
                 start=start_date, 
                 end=end_date, 
-                interval='1d', 
+                interval=interval, 
                 progress=False,
                 auto_adjust=True,
                 prepost=False,
@@ -91,7 +98,7 @@ def fetch_stock_data(symbol, start_date, end_date, retries=3):
             data = ticker.history(
                 start=start_date, 
                 end=end_date, 
-                interval='1d',
+                interval=interval,
                 auto_adjust=True,
                 prepost=False
             )
@@ -113,6 +120,25 @@ def fetch_stock_data(symbol, start_date, end_date, retries=3):
     # If all methods fail, return None
     print(f"All attempts failed for {symbol}")
     return None
+
+def get_bars_per_year(interval):
+    """
+    Calculate the number of trading bars per year based on the interval.
+    
+    Args:
+        interval: Data interval - '1d', '1h', '15m', '5m'
+    
+    Returns:
+        Number of bars per year for annualization calculations
+    """
+    # Assumes ~252 trading days per year, 6.5 trading hours per day
+    bars_map = {
+        '1d': 252,           # Daily bars
+        '1h': 252 * 6.5,     # Hourly bars (~1638/year)
+        '15m': 252 * 6.5 * 4,  # 15-minute bars (~6552/year)
+        '5m': 252 * 6.5 * 12,  # 5-minute bars (~19656/year)
+    }
+    return bars_map.get(interval, 252)  # Default to daily if unknown
 
 # =============================================================================
 # App Initialization
@@ -153,6 +179,21 @@ def build_control_panel():
                 style={'marginBottom': '0'}
             ),
         ]),
+        
+        html.Label("Data Interval"),
+        dcc.Dropdown(
+            id='input-interval',
+            options=[
+                {'label': 'Daily (1 day bars)', 'value': '1d'},
+                {'label': 'Hourly (1 hour bars)', 'value': '1h'},
+                {'label': '15-Minute bars', 'value': '15m'},
+                {'label': '5-Minute bars', 'value': '5m'}
+            ],
+            value='1d',
+            className='input-field',
+            clearable=False
+        ),
+        html.Div("Note: Intraday data limited to last 60-730 days by Yahoo Finance", className='input-hint', style={'fontSize': '11px', 'marginTop': '4px'}),
         
         html.Label("Starting Capital"),
         dcc.Input(id='input-capital', type='number', value=100000, className='input-field'),
@@ -624,6 +665,7 @@ def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
     [State('input-symbol', 'value'),
      State('input-start-date', 'value'),
      State('input-end-date', 'value'),
+     State('input-interval', 'value'),
      State('input-capital', 'value'),
      State('slider-min-confidence', 'value'),
      State('slider-max-confidence', 'value'),
@@ -634,7 +676,7 @@ def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
      State('slider-val-pct', 'value'),
      State('input-early-stopping', 'value')]
 )
-def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence_long, max_confidence_short, loss_threshold_pct, trail_vol_scale, n_estimators, train_pct, val_pct, early_stopping_rounds):
+def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_confidence_long, max_confidence_short, loss_threshold_pct, trail_vol_scale, n_estimators, train_pct, val_pct, early_stopping_rounds):
     if n_clicks == 0:
         return html.Div("Set parameters and click 'Run Backtest' to start.", style={'textAlign': 'center', 'marginTop': '50px'}), ''
 
@@ -644,8 +686,11 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
         min_confidence = min_confidence_long / 100.0
         max_confidence = max_confidence_short / 100.0
         
+        # Get bars per year for annualization based on interval
+        bars_per_year = get_bars_per_year(interval if interval else '1d')
+        
         # 1. Fetch & Feature Engineering
-        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
+        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date, interval if interval else '1d')
         if data is None or data.empty:
             return html.Div([
                 html.H4(f"Unable to fetch data for '{symbol}'" , style={'color': 'red'}),
@@ -676,7 +721,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
         data['MA20'] = data['Close'].rolling(window=20).mean()
         data['MA50'] = data['Close'].rolling(window=50).mean()
         data['RSI'] = compute_rsi(data['Close'])
-        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(252)
+        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(bars_per_year)
         data['VolumePct'] = data['Volume'].pct_change()
         data['Sentiment'] = data.index.to_series().apply(fetch_news_sentiment)
         
@@ -803,17 +848,17 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
         # 4. Performance Metrics
         final_value = data['Cumulative Returns'].iloc[-1] if not data['Cumulative Returns'].empty else capital
         total_return = (final_value / capital) - 1
-        annualized_return = (1 + total_return) ** (252 / len(data)) - 1 if len(data) > 0 else 0
+        annualized_return = (1 + total_return) ** (bars_per_year / len(data)) - 1 if len(data) > 0 else 0
         daily_returns = data['Returns'].fillna(0)
         std_daily = daily_returns.std()
-        sharpe_ratio = (annualized_return) / (std_daily * np.sqrt(252)) if std_daily > 1e-6 else 0
+        sharpe_ratio = (annualized_return) / (std_daily * np.sqrt(bars_per_year)) if std_daily > 1e-6 else 0
         
         peak = data['Cumulative Returns'].cummax()
         drawdown = peak - data['Cumulative Returns']
         max_drawdown_val = drawdown.max()
         max_drawdown_pct = (max_drawdown_val / peak.max()) if peak.max() > 0 else 0
 
-        volatility_annual = std_daily * np.sqrt(252)
+        volatility_annual = std_daily * np.sqrt(bars_per_year)
         win_rate = (data['Returns'] > 0).sum() / (data['PnL'] != 0).sum() if (data['PnL'] != 0).sum() > 0 else 0
         
         summary_text = f"""
@@ -821,6 +866,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, capital, min_confidence
 📊 STRATEGY PERFORMANCE SUMMARY
 ============================================================
 Symbol:                    {symbol.upper()}
+Interval:                  {interval if interval else '1d'}
 Start Date:                {data.index[0].strftime('%Y-%m-%d')}
 End Date:                  {data.index[-1].strftime('%Y-%m-%d')}
 ============================================================
@@ -1133,9 +1179,9 @@ def validate_splits(train_val, val_val):
 @app.callback(
     Output('exp-progress', 'children'),
     Input('run-experiments-button', 'n_clicks'),
-    [State('exp-n-estimators', 'value'), State('exp-train-pct', 'value'), State('exp-val-pct', 'value'), State('exp-early-stopping', 'value'), State('exp-mode', 'value'), State('exp-n-trials', 'value'), State('input-symbol','value'), State('input-start-date','value'), State('input-end-date','value'), State('slider-min-confidence','value'), State('slider-max-confidence','value'), State('slider-loss-threshold','value'), State('slider-trail-vol-scale','value')]
+    [State('exp-n-estimators', 'value'), State('exp-train-pct', 'value'), State('exp-val-pct', 'value'), State('exp-early-stopping', 'value'), State('exp-mode', 'value'), State('exp-n-trials', 'value'), State('input-symbol','value'), State('input-start-date','value'), State('input-end-date','value'), State('input-interval','value'), State('slider-min-confidence','value'), State('slider-max-confidence','value'), State('slider-loss-threshold','value'), State('slider-trail-vol-scale','value')]
 )
-def run_experiments(n_clicks, n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, min_conf, max_conf, loss_threshold_pct, trail_vol_scale):
+def run_experiments(n_clicks, n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, interval, min_conf, max_conf, loss_threshold_pct, trail_vol_scale):
     if not n_clicks:
         return ''
     
@@ -1149,13 +1195,13 @@ def run_experiments(n_clicks, n_est_str, train_str, val_str, es_str, mode, n_tri
         exp_status['results_file'] = None
     
     # Spawn background thread
-    thread = threading.Thread(target=_run_experiments_bg, args=(n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, min_conf, max_conf, loss_threshold_pct, trail_vol_scale))
+    thread = threading.Thread(target=_run_experiments_bg, args=(n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, interval, min_conf, max_conf, loss_threshold_pct, trail_vol_scale))
     thread.daemon = True
     thread.start()
     
     return 'Experiments running in background... Check progress below.'
 
-def _run_experiments_bg(n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, min_conf, max_conf, loss_threshold_pct, trail_vol_scale):
+def _run_experiments_bg(n_est_str, train_str, val_str, es_str, mode, n_trials, symbol, start_date, end_date, interval, min_conf, max_conf, loss_threshold_pct, trail_vol_scale):
     """Background thread function to run experiments."""
     global exp_status
     
@@ -1183,7 +1229,8 @@ def _run_experiments_bg(n_est_str, train_str, val_str, es_str, mode, n_trials, s
 
         update_progress('Fetching data...')
         # Fetch and preprocess data once
-        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
+        bars_per_year = get_bars_per_year(interval if interval else '1d')
+        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date, interval if interval else '1d')
         if data is None or data.empty:
             update_progress(f'ERROR: Unable to fetch data for {symbol}. Yahoo Finance API may be temporarily unavailable. Please try again.')
             with exp_lock:
@@ -1194,7 +1241,7 @@ def _run_experiments_bg(n_est_str, train_str, val_str, es_str, mode, n_trials, s
         data['MA20'] = data['Close'].rolling(window=20).mean()
         data['MA50'] = data['Close'].rolling(window=50).mean()
         data['RSI'] = compute_rsi(data['Close'])
-        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(252)
+        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(bars_per_year)
         data['VolumePct'] = data['Volume'].pct_change()
         data['Sentiment'] = data.index.to_series().apply(fetch_news_sentiment)
         macd_line, macd_signal, macd_hist = compute_macd(data['Close'])
@@ -1341,17 +1388,19 @@ def poll_exp_progress(_):
     [State('input-symbol', 'value'),
      State('input-start-date', 'value'),
      State('input-end-date', 'value'),
+     State('input-interval', 'value'),
      State('slider-train-pct', 'value'),
      State('slider-val-pct', 'value'),
      State('bayes-n-calls', 'value')]
 )
-def run_bayesian_optimization(n_clicks, symbol, start_date, end_date, train_pct, val_pct, n_calls):
+def run_bayesian_optimization(n_clicks, symbol, start_date, end_date, interval, train_pct, val_pct, n_calls):
     if not n_clicks or not BAYESIAN_OPT_AVAILABLE:
         return '', ''
     
     try:
         # Fetch data
-        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date)
+        bars_per_year = get_bars_per_year(interval if interval else '1d')
+        data = fetch_stock_data(symbol if symbol else 'SPY', start_date, end_date, interval if interval else '1d')
         if data is None or data.empty:
             return 'Error fetching data', ''
         
@@ -1359,7 +1408,7 @@ def run_bayesian_optimization(n_clicks, symbol, start_date, end_date, train_pct,
         data['MA20'] = data['Close'].rolling(window=20).mean()
         data['MA50'] = data['Close'].rolling(window=50).mean()
         data['RSI'] = compute_rsi(data['Close'])
-        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(252)
+        data['Volatility'] = data['Close'].pct_change().rolling(20).std() * np.sqrt(bars_per_year)
         data['MACD'], data['MACD_Signal'], data['MACD_Histogram'] = compute_macd(data['Close'])
         data['Return'] = data['Close'].pct_change()
         data['Target'] = np.where(data['Return'].shift(-1) > 0, 1, 0)

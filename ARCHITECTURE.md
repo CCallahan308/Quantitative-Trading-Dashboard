@@ -94,18 +94,20 @@ Deep-dive into the system design and implementation details.
 1. USER INPUT
    ├─ Symbol: 'SPY'
    ├─ Date Range: 2024-01-01 to 2025-11-16
+   ├─ Interval: '1d', '1h', '15m', or '5m' (NEW)
    ├─ Confidence Thresholds: (0.75, 0.25)
    └─ Model Params: n_estimators=500, train_pct=65, etc.
 
 2. DATA FETCHING
-   ├─ yf.download(symbol, start, end)
+   ├─ yf.download(symbol, start, end, interval)
    ├─ Flatten MultiIndex if needed
+   ├─ Calculate bars_per_year for interval (NEW)
    └─ Validate data quality
 
 3. FEATURE ENGINEERING
    ├─ Rolling averages (MA20, MA50)
    ├─ Momentum (RSI, MACD, ADX)
-   ├─ Volatility (ATR, Bollinger Bands)
+   ├─ Volatility (ATR, Bollinger Bands) - with interval-specific annualization (NEW)
    ├─ Sentiment (TextBlob on news)
    └─ Drop NaN rows (after all features computed)
 
@@ -144,8 +146,8 @@ Deep-dive into the system design and implementation details.
 
 8. METRICS CALCULATION
    ├─ Total Return: (final_value / initial_capital) - 1
-   ├─ Annualized Return: (1 + total_return)^(252/days) - 1
-   ├─ Sharpe Ratio: (annual_return / annual_volatility)
+   ├─ Annualized Return: (1 + total_return)^(bars_per_year/days) - 1 (NEW - interval aware)
+   ├─ Sharpe Ratio: (annual_return / annual_volatility) (NEW - uses correct bars_per_year)
    ├─ Max Drawdown: (peak - trough) / peak
    ├─ Win Rate: winning_trades / total_trades
    └─ ROC AUC: sklearn.metrics.auc(fpr, tpr)
@@ -416,6 +418,50 @@ if (train_pct + val_pct) >= 100:
 ### Model Security
 - Serialized models should be from trusted sources
 - Consider signing/checksumming model files in production
+
+## Intraday Data Support
+
+### Overview
+The system now supports multiple data intervals:
+- **Daily (1d)**: Traditional end-of-day bars (252 trading days/year)
+- **Hourly (1h)**: Intraday hourly bars (~1,638 bars/year)
+- **15-Minute (15m)**: High-frequency 15-min bars (~6,552 bars/year)
+- **5-Minute (5m)**: Ultra high-frequency 5-min bars (~19,656 bars/year)
+
+### Implementation Details
+
+#### Bars Per Year Calculation
+```python
+def get_bars_per_year(interval):
+    # Trading hours: 6.5 hours per day, 252 trading days per year
+    bars_map = {
+        '1d': 252,
+        '1h': 252 * 6.5,      # 1,638
+        '15m': 252 * 6.5 * 4,  # 6,552
+        '5m': 252 * 6.5 * 12,  # 19,656
+    }
+    return bars_map.get(interval, 252)
+```
+
+#### Annualization Adjustments
+All metrics that require annualization use `bars_per_year`:
+
+1. **Volatility**: `std(returns) * sqrt(bars_per_year)`
+2. **Annualized Return**: `(1 + total_return) ^ (bars_per_year / n_bars) - 1`
+3. **Sharpe Ratio**: `annual_return / (std * sqrt(bars_per_year))`
+
+#### Yahoo Finance Limitations
+- Intraday data is limited to recent history (60-730 days depending on interval)
+- 5-minute data: typically 60 days max
+- 15-minute data: typically 60 days max
+- Hourly data: typically 730 days max
+- Daily data: full historical data available
+
+#### Usage Recommendations
+1. **Intraday backtests**: Use shorter date ranges (e.g., 7-60 days)
+2. **Daily backtests**: Can use multi-year ranges
+3. **Feature windows**: Same window sizes work across all intervals (20, 50 bars)
+4. **Model training**: More bars = more training data for intraday strategies
 
 ## Future Optimization Opportunities
 

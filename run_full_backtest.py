@@ -15,14 +15,17 @@ tv = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tv)
 
 
-def run(symbol='SPY', start_date='2024-01-01', end_date=None, capital=1000, min_conf=0.75, max_conf=0.25, loss_threshold_pct=5, trail_vol_scale=0.05):
+def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', capital=1000, min_conf=0.75, max_conf=0.25, loss_threshold_pct=5, trail_vol_scale=0.05):
     if end_date is None:
         end_date = datetime.now().strftime('%Y-%m-%d')
 
     loss_threshold = loss_threshold_pct / 100.0
+    
+    # Calculate bars per year based on interval
+    bars_per_year = tv.get_bars_per_year(interval)
 
     # Fetch data
-    data = tv.yf.download(symbol, start=start_date, end=end_date, interval='1d')
+    data = tv.yf.download(symbol, start=start_date, end=end_date, interval=interval)
     if data.empty:
         print('No data returned')
         return
@@ -35,7 +38,7 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, capital=1000, min_
     data['MA20'] = data['Close'].rolling(window=20).mean()
     data['MA50'] = data['Close'].rolling(window=50).mean()
     data['RSI'] = tv.compute_rsi(data['Close'])
-    data['Volatility'] = data['Close'].pct_change().rolling(20).std() * (252 ** 0.5)
+    data['Volatility'] = data['Close'].pct_change().rolling(20).std() * (bars_per_year ** 0.5)
     data['VolumePct'] = data['Volume'].pct_change()
     data['Sentiment'] = data.index.to_series().apply(tv.fetch_news_sentiment)
 
@@ -103,18 +106,18 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, capital=1000, min_
 
     final_value = res['Cumulative Returns'].iloc[-1] if not res['Cumulative Returns'].empty else capital
     total_return = (final_value / capital) - 1
-    annualized_return = (1 + total_return) ** (252 / len(res)) - 1 if len(res)>0 else 0
+    annualized_return = (1 + total_return) ** (bars_per_year / len(res)) - 1 if len(res)>0 else 0
     daily_returns = res['Returns'].fillna(0)
     std_daily = daily_returns.std()
-    sharpe = (annualized_return) / (std_daily * (252 ** 0.5)) if std_daily > 1e-6 else 0
+    sharpe = (annualized_return) / (std_daily * (bars_per_year ** 0.5)) if std_daily > 1e-6 else 0
     win_rate = (res['Returns'] > 0).sum() / (res['PnL'] != 0).sum() if (res['PnL'] != 0).sum() > 0 else 0
     trades = (res['PnL'] != 0).sum()
 
     print('--- Backtest Summary ---')
-    print(f'Symbol: {symbol}  Period: {start_date} to {end_date}')
+    print(f'Symbol: {symbol}  Interval: {interval}  Period: {start_date} to {end_date}')
     print(f'Final Value: ${final_value:,.2f}')
     print(f'Total Return: {total_return:.2%}  Annualized: {annualized_return:.2%}')
-    print(f'Annual Volatility: {std_daily * (252**0.5):.2%}  Sharpe: {sharpe:.2f}')
+    print(f'Annual Volatility: {std_daily * (bars_per_year**0.5):.2%}  Sharpe: {sharpe:.2f}')
     print(f'Win rate: {win_rate:.2%}  Trades: {trades}')
 
     # Save charts
