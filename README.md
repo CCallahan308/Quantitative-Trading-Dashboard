@@ -293,7 +293,6 @@ else:
 - [ ] Live trading integration (Interactive Brokers, Alpaca)
 - [ ] Multi-asset portfolio support
 - [ ] Advanced order types (bracket orders, OCO)
-- [ ] 
 ## 📝 License
 
 MIT License - see LICENSE file for details
