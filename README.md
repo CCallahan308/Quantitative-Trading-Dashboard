@@ -72,7 +72,7 @@ Experience a professional, dark-mode interface designed for quantitative analyst
 
 ## 📊 Dashboard UI
 
-The dashboard features a professional, dark-mode design inspired by enterprise trading platforms. See the [Dashboard UI Showcase](#️-dashboard-ui-showcase) above for actual screenshots.
+The dashboard features a professional, dark-mode design inspired by enterprise trading platforms. See the [Dashboard UI Showcase](#-dashboard-ui-showcase) above for actual screenshots.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
