@@ -14,13 +14,17 @@ spec = importlib.util.spec_from_file_location('quant_dashboard_module', module_p
 tv = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tv)
 
+# Constants
+BPS_TO_DECIMAL = 10000.0  # Convert basis points to decimal
+ENTRY_EXIT_COST_MULTIPLIER = 2  # Transaction cost applied on both entry and exit
+
 
 def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', capital=1000, min_conf=0.75, max_conf=0.25, loss_threshold_pct=5, trail_vol_scale=0.05, transaction_cost_bps=10, risk_free_rate_pct=5.0):
     if end_date is None:
         end_date = datetime.now().strftime('%Y-%m-%d')
 
     loss_threshold = loss_threshold_pct / 100.0
-    transaction_cost = transaction_cost_bps / 10000.0  # Convert bps to decimal
+    transaction_cost = transaction_cost_bps / BPS_TO_DECIMAL
     risk_free_rate = risk_free_rate_pct / 100.0  # Convert percentage to decimal
     
     # Calculate bars per year based on interval
@@ -123,7 +127,7 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', cap
     
     # Calculate returns with transaction costs
     res['TradeEntry'] = (res['Signal'].diff().abs() > 0).astype(int)
-    res['TransactionCosts'] = res['TradeEntry'] * transaction_cost * 2  # Entry + eventual exit
+    res['TransactionCosts'] = res['TradeEntry'] * transaction_cost * ENTRY_EXIT_COST_MULTIPLIER
     res['Returns'] = res['PnL'] * res['PositionSize'] - res['TransactionCosts']
     res['Cumulative Returns'] = (1 + res['Returns']).cumprod() * capital
 

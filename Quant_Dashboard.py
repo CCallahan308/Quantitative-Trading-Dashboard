@@ -34,6 +34,12 @@ import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # =============================================================================
+# Constants
+# =============================================================================
+BPS_TO_DECIMAL = 10000.0  # Convert basis points to decimal (e.g., 10 bps = 0.001)
+ENTRY_EXIT_COST_MULTIPLIER = 2  # Transaction cost applied on both entry and exit
+
+# =============================================================================
 # Robust Data Fetching Function with Fallbacks
 # =============================================================================
 def fetch_stock_data(symbol, start_date, end_date, interval='1d', retries=3):
@@ -697,7 +703,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_
         max_confidence = max_confidence_short / 100.0
         
         # Convert transaction cost from basis points to decimal (e.g., 10 bps = 0.001)
-        transaction_cost = (transaction_cost_bps if transaction_cost_bps else 10) / 10000.0
+        transaction_cost = (transaction_cost_bps if transaction_cost_bps else 10) / BPS_TO_DECIMAL
         
         # Convert risk-free rate from percentage to decimal (e.g., 5% = 0.05)
         risk_free_rate = (risk_free_rate_pct if risk_free_rate_pct else 5.0) / 100.0
@@ -881,7 +887,7 @@ def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_
         # Calculate returns with transaction costs
         # Apply transaction cost on each trade entry and exit
         data['TradeEntry'] = (data['Signal'].diff().abs() > 0).astype(int)
-        data['TransactionCosts'] = data['TradeEntry'] * transaction_cost * 2  # Entry + eventual exit
+        data['TransactionCosts'] = data['TradeEntry'] * transaction_cost * ENTRY_EXIT_COST_MULTIPLIER
         data['Returns'] = data['PnL'] * data['PositionSize'] - data['TransactionCosts']
         data['Cumulative Returns'] = (1 + data['Returns']).cumprod() * capital
 
@@ -1373,10 +1379,21 @@ def _run_experiments_bg(n_est_str, train_str, val_str, es_str, mode, n_trials, s
             except Exception:
                 cm = None; roc_auc=None; accuracy=None
 
-            # quick backtest using signals
+            # quick backtest using signals - ONLY on out-of-sample data to avoid look-ahead bias
             data_local = data.copy()
-            data_local['Confidence'] = pd.Series(model.predict_proba(X_all)[:,1], index=X_all.index)
+            
+            # Only use out-of-sample predictions
+            y_proba_all = np.zeros(len(X_all))
+            y_proba_all[:train_size] = np.nan  # No trading on training data
+            y_proba_all[train_size:train_size+test_size] = model.predict_proba(X_test)[:, 1]
+            # Validation data (if any)
+            if len(X_all) > train_size + test_size:
+                X_val_local = X_all[train_size+test_size:]
+                y_proba_all[train_size+test_size:] = model.predict_proba(X_val_local)[:, 1]
+            
+            data_local['Confidence'] = pd.Series(y_proba_all, index=X_all.index)
             data_local['Signal'] = np.where(data_local['Confidence'] > min_conf, 1, np.where(data_local['Confidence'] < max_conf, -1, 0))
+            data_local.loc[data_local['Confidence'].isna(), 'Signal'] = 0
             data_local['Signal'] = data_local['Signal'].shift(1)
             res_local = simulate_risk_aware_backtest(data_local, loss_threshold_pct/100.0, trail_vol_scale)
             res_local['Returns'] = res_local['PnL'] * res_local['PositionSize']
