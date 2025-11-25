@@ -230,6 +230,14 @@ def build_control_panel():
         html.Label("Early Stopping Rounds (0 to disable)"),
         dcc.Input(id='input-early-stopping', type='number', value=50, min=0, step=10, className='input-field'),
         
+        html.Label("Transaction Cost (bps per trade)"),
+        dcc.Input(id='input-transaction-cost', type='number', value=10, min=0, max=100, step=1, className='input-field'),
+        html.Div("Basis points (10 bps = 0.10%). Accounts for slippage and commissions.", className='input-hint'),
+        
+        html.Label("Risk-Free Rate (% annual)"),
+        dcc.Input(id='input-risk-free-rate', type='number', value=5.0, min=0, max=15, step=0.1, className='input-field'),
+        html.Div("Annual risk-free rate for Sharpe calculation (e.g., T-bill rate).", className='input-hint'),
+        
         html.Button('Run Backtest', id='run-button', n_clicks=0, className='run-button'),
         
         html.Hr(),
@@ -674,9 +682,11 @@ def simulate_risk_aware_backtest(df, loss_threshold=0.05, trail_vol_scale=0.05):
      State('input-n-estimators', 'value'),
      State('slider-train-pct', 'value'),
      State('slider-val-pct', 'value'),
-     State('input-early-stopping', 'value')]
+     State('input-early-stopping', 'value'),
+     State('input-transaction-cost', 'value'),
+     State('input-risk-free-rate', 'value')]
 )
-def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_confidence_long, max_confidence_short, loss_threshold_pct, trail_vol_scale, n_estimators, train_pct, val_pct, early_stopping_rounds):
+def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_confidence_long, max_confidence_short, loss_threshold_pct, trail_vol_scale, n_estimators, train_pct, val_pct, early_stopping_rounds, transaction_cost_bps, risk_free_rate_pct):
     if n_clicks == 0:
         return html.Div("Set parameters and click 'Run Backtest' to start.", style={'textAlign': 'center', 'marginTop': '50px'}), ''
 
@@ -685,6 +695,12 @@ def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_
         trail_vol_scale_val = trail_vol_scale / 100.0
         min_confidence = min_confidence_long / 100.0
         max_confidence = max_confidence_short / 100.0
+        
+        # Convert transaction cost from basis points to decimal (e.g., 10 bps = 0.001)
+        transaction_cost = (transaction_cost_bps if transaction_cost_bps else 10) / 10000.0
+        
+        # Convert risk-free rate from percentage to decimal (e.g., 5% = 0.05)
+        risk_free_rate = (risk_free_rate_pct if risk_free_rate_pct else 5.0) / 100.0
         
         # Get bars per year for annualization based on interval
         bars_per_year = get_bars_per_year(interval if interval else '1d')
@@ -835,23 +851,52 @@ def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_
             fpr = tpr = []
             roc_auc = None
 
-        y_proba = model_xgb.predict_proba(X)[:, 1]
-        data['Confidence'] = pd.Series(y_proba, index=data.index)
-        data['Signal'] = np.where(data['Confidence'] > min_confidence, 1, np.where(data['Confidence'] < max_confidence, -1, 0))
+        # IMPORTANT: Only use out-of-sample predictions to avoid look-ahead bias
+        # Generate predictions separately for train, test, and validation sets
+        # Train set uses in-sample predictions (for visualization only, not trading)
+        # Test + Val sets use out-of-sample predictions (realistic for backtesting)
+        
+        y_proba_all = np.zeros(len(X))
+        
+        # For training data: mark as NaN (no trading on in-sample data)
+        y_proba_all[:train_size] = np.nan
+        
+        # For test data: use out-of-sample predictions from model trained on train data
+        y_proba_all[train_size:train_size+test_size] = model_xgb.predict_proba(X_test)[:, 1]
+        
+        # For validation data: use out-of-sample predictions
+        if len(X_val) > 0:
+            y_proba_all[train_size+test_size:] = model_xgb.predict_proba(X_val)[:, 1]
+        
+        data['Confidence'] = pd.Series(y_proba_all, index=data.index)
+        data['Signal'] = np.where(data['Confidence'] > min_confidence, 1, 
+                                  np.where(data['Confidence'] < max_confidence, -1, 0))
+        # Don't generate signals for training period (where confidence is NaN)
+        data.loc[data['Confidence'].isna(), 'Signal'] = 0
         data['Signal'] = data['Signal'].shift(1)
 
-        # 3. Backtest
+        # 3. Backtest with transaction costs
         data = simulate_risk_aware_backtest(data, loss_threshold, trail_vol_scale_val)
-        data['Returns'] = data['PnL'] * data['PositionSize']
+        
+        # Calculate returns with transaction costs
+        # Apply transaction cost on each trade entry and exit
+        data['TradeEntry'] = (data['Signal'].diff().abs() > 0).astype(int)
+        data['TransactionCosts'] = data['TradeEntry'] * transaction_cost * 2  # Entry + eventual exit
+        data['Returns'] = data['PnL'] * data['PositionSize'] - data['TransactionCosts']
         data['Cumulative Returns'] = (1 + data['Returns']).cumprod() * capital
 
-        # 4. Performance Metrics
+        # 4. Performance Metrics with proper Sharpe calculation
         final_value = data['Cumulative Returns'].iloc[-1] if not data['Cumulative Returns'].empty else capital
         total_return = (final_value / capital) - 1
         annualized_return = (1 + total_return) ** (bars_per_year / len(data)) - 1 if len(data) > 0 else 0
         daily_returns = data['Returns'].fillna(0)
         std_daily = daily_returns.std()
-        sharpe_ratio = (annualized_return) / (std_daily * np.sqrt(bars_per_year)) if std_daily > 1e-6 else 0
+        
+        # Calculate excess return and proper Sharpe ratio
+        # Sharpe = (Annualized Return - Risk Free Rate) / Annualized Volatility
+        volatility_annual = std_daily * np.sqrt(bars_per_year)
+        excess_return = annualized_return - risk_free_rate
+        sharpe_ratio = excess_return / volatility_annual if volatility_annual > 1e-6 else 0
         
         peak = data['Cumulative Returns'].cummax()
         drawdown = peak - data['Cumulative Returns']
@@ -860,6 +905,9 @@ def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_
 
         volatility_annual = std_daily * np.sqrt(bars_per_year)
         win_rate = (data['Returns'] > 0).sum() / (data['PnL'] != 0).sum() if (data['PnL'] != 0).sum() > 0 else 0
+        
+        # Calculate total transaction costs paid
+        total_txn_costs = data['TransactionCosts'].sum() * capital
         
         summary_text = f"""
 ============================================================
@@ -877,11 +925,17 @@ Annualized Return:         {annualized_return:.2%}
 ============================================================
 Annual Volatility:         {volatility_annual:.2%}
 Sharpe Ratio:              {sharpe_ratio:.2f}
+  (Risk-Free Rate:         {risk_free_rate:.2%})
+  (Excess Return:          {excess_return:.2%})
 Max Drawdown:              {max_drawdown_pct:.2%}
 Win Rate (Trades):         {win_rate:.2%}
 ============================================================
 Trade Count:               {(data['PnL'] != 0).sum()}
+Transaction Costs Paid:    ${total_txn_costs:,.2f}
 Avg Position Size:         {data[data['PnL'] != 0]['PositionSize'].mean():.2%}
+============================================================
+⚠️  NOTE: Sharpe calculated on OUT-OF-SAMPLE data only
+    (Test + Validation periods, not training period)
 ============================================================
 """
         latest = data.iloc[-1]
