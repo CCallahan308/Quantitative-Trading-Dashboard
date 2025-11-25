@@ -6,6 +6,35 @@
 
 A professional-grade quantitative trading backtesting framework with interactive machine learning capabilities, built for algorithmic traders and quantitative analysts.
 
+## 🖼️ Dashboard UI Showcase
+
+Experience a professional, dark-mode interface designed for quantitative analysts. The dashboard combines institutional-grade aesthetics with powerful analytics capabilities, featuring interactive charts, real-time metrics, and comprehensive model diagnostics.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/factor_attribution.png" alt="Factor Attribution Analysis" title="Factor Attribution Analysis" width="400"/>
+      <br/><em>Factor Attribution Analysis</em>
+    </td>
+    <td align="center">
+      <img src="assets/images/model_diagnostics.png" alt="Model Diagnostics" title="Model Diagnostics" width="400"/>
+      <br/><em>Model Diagnostics</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/performance_metrics.png" alt="Performance Metrics" title="Performance Metrics" width="400"/>
+      <br/><em>Performance Metrics</em>
+    </td>
+    <td align="center">
+      <img src="assets/images/returns_distribution.png" alt="Returns Distribution" title="Returns Distribution" width="400"/>
+      <br/><em>Returns Distribution</em>
+    </td>
+  </tr>
+</table>
+
+> 💡 **Professional UI/UX**: These screenshots demonstrate the dashboard's enterprise-grade interface featuring interactive Plotly visualizations, real-time performance metrics, risk analytics, and comprehensive model evaluation tools—all styled with a modern dark theme optimized for extended trading sessions.
+
 ## 🎯 Features
 
 ### Core Backtesting Engine
@@ -43,7 +72,7 @@ A professional-grade quantitative trading backtesting framework with interactive
 
 ## 📊 Dashboard UI
 
-The dashboard features a professional, dark-mode design inspired by enterprise trading platforms:
+The dashboard features a professional, dark-mode design inspired by enterprise trading platforms. See the [Dashboard UI Showcase](#-dashboard-ui-showcase) above for actual screenshots.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
