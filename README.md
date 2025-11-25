@@ -23,11 +23,11 @@ Experience a professional, dark-mode interface designed for quantitative analyst
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/images/Output.png" width="400"/>
+      <img src="assets/images/Factor.png" width="400"/>
       <br/><em>Factor Attribution</em>
     </td>
     <td align="center">
-      <img src="assets/images/Output.png" width="400"/>
+      <img src="assets/images/Factor2.png" width="400"/>
       <br/><em>Factor Attribution Analysis</em>
     </td>
   </tr>
