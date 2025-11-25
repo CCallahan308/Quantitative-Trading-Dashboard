@@ -14,21 +14,21 @@ Experience a professional, dark-mode interface designed for quantitative analyst
   <tr>
     <td align="center">
       <img src="assets/images/KPIs.png" width="400"/>
-      <br/><em>Factor Attribution Analysis</em>
+      <br/><em>Analysis KPIs</em>
     </td>
     <td align="center">
       <img src="assets/images/Output.png" width="400"/>
-      <br/><em>Model Diagnostics</em>
+      <br/><em>Model Output</em>
     </td>
   </tr>
   <tr>
     <td align="center">
       <img src="assets/images/Output.png" width="400"/>
-      <br/><em>Performance Metrics</em>
+      <br/><em>Factor Attribution</em>
     </td>
     <td align="center">
       <img src="assets/images/Output.png" width="400"/>
-      <br/><em>Returns Distribution</em>
+      <br/><em>Factor Attribution Analysis</em>
     </td>
   </tr>
 </table>
