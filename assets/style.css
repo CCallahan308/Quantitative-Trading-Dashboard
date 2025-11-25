@@ -700,3 +700,76 @@ table tbody tr:last-child td {
   background-color: rgba(0, 0, 0, 0.9) !important;
   color: var(--accent-primary) !important;
 }
+
+/* =============================================================================
+   DASH / react-select (dcc.Dropdown) OVERRIDES
+   These rules improve contrast for dropdown controls and option lists so items
+   are readable on the app's dark theme. We include several selector names to
+   catch different react-select / Dash versions and generated classnames.
+   ============================================================================= */
+
+/* Control (closed dropdown) */
+.react-select__control,
+.css-1s2u09g-control,
+.Select__control,
+.Select-control,
+.input-field.react-select__control {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dropdown menu (floating list) */
+.react-select__menu,
+.Select-menu-outer,
+.Select__menu,
+[role="listbox"] {
+  background: var(--secondary-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-light) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Individual options */
+.react-select__option,
+.Select-option,
+.rc-Select-option,
+[role="option"] {
+  color: var(--text-primary) !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+}
+
+/* Disabled/unselectable options — slightly muted but readable */
+.react-select__option--is-disabled,
+.Select-option.is-disabled,
+[role="option"][aria-disabled="true"] {
+  color: var(--text-tertiary) !important;
+  opacity: 0.95 !important;
+}
+
+/* Focus / hover / keyboard navigation */
+.react-select__option--is-focused,
+.Select-option.is-focused,
+.Select-option:hover,
+[role="option"]:hover {
+  background: rgba(74, 144, 226, 0.10) !important; /* subtle blue */
+  color: var(--text-primary) !important;
+}
+
+/* Selected option */
+.react-select__option--is-selected,
+.Select-option.is-selected,
+[role="option"][aria-selected="true"] {
+  background: rgba(0, 168, 107, 0.10) !important; /* subtle green */
+  color: var(--text-primary) !important;
+}
+
+/* When react-select injects inline styles on the menu, enforce readable link/text color
+   for any nested elements (icons/labels) */
+.react-select__menu *,
+.Select-menu-outer *,
+[role="listbox"] * {
+  color: inherit !important;
+}
+
