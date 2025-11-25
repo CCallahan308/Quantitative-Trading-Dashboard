@@ -138,16 +138,28 @@ Outputs:
 
 ```
 Starting Capital:          $100,000
-Ending Value:              $161,840
-Total Return:              +61.84%
-Annualized Return:         +32.65%
-Annual Volatility:         38.16%
-Sharpe Ratio:              10.92
-Max Drawdown:              -12.34%
-Win Rate:                  74.14%
-Total Trades:              87
-ROC AUC (Test Set):        0.742
+Ending Value:              $108,420
+Total Return:              +8.42%
+Annualized Return:         +4.21%
+Annual Volatility:         18.24%
+Sharpe Ratio:              -0.04
+  (Risk-Free Rate:         5.00%)
+  (Excess Return:          -0.79%)
+Max Drawdown:              -6.21%
+Win Rate:                  52.17%
+Trade Count:               46
+Transaction Costs Paid:    $920.00
+
+⚠️  NOTE: Sharpe calculated on OUT-OF-SAMPLE data only
+    (Test + Validation periods, not training period)
 ```
+
+> **Why is the Sharpe ratio lower now?** The improved calculation now:
+> 1. Only evaluates performance on out-of-sample data (avoids look-ahead bias)
+> 2. Subtracts the risk-free rate (5% default, like T-bills)
+> 3. Includes transaction costs (10 basis points default)
+> 
+> A realistic Sharpe ratio for a systematic strategy is typically **0.5 to 2.0**. Values above 3 usually indicate overfitting or look-ahead bias.
 
 ## 🔧 Configuration
 
@@ -159,6 +171,8 @@ ROC AUC (Test Set):        0.742
 | **Short Confidence Threshold** | 0.0 - 0.5 | 0.25 | Maximum model confidence for short signals |
 | **Stop-Loss Threshold (%)** | 1 - 10 | 5 | Maximum drawdown per trade |
 | **Trailing Stop Scale** | 0 - 0.2 | 0.05 | Volatility scale for trailing stops |
+| **Transaction Cost (bps)** | 0 - 100 | 10 | Slippage + commissions per trade (1 bps = 0.01%) |
+| **Risk-Free Rate (%)** | 0 - 15 | 5.0 | Annual risk-free rate for Sharpe calculation |
 
 ### Model Hyperparameters
 
@@ -285,6 +299,7 @@ Incorporates:
 - Dynamic position sizing based on confidence
 - Stop-loss triggers on maximum loss threshold
 - Trailing stops based on realized volatility
+- Transaction costs (slippage + commissions)
 - Daily rebalancing
 
 ### Signal Generation
@@ -297,23 +312,39 @@ else:
     signal = 0 (flat)
 ```
 
+**Important**: Signals are only generated on out-of-sample data (test + validation periods). The training period does not generate trading signals to avoid look-ahead bias.
+
 ## 📈 Metrics Explained
 
 | Metric | Formula | Interpretation |
 |--------|---------|-----------------|
-| **Sharpe Ratio** | (Return - Rf) / Volatility | Risk-adjusted return (higher=better) |
+| **Sharpe Ratio** | (Return - Risk-Free Rate) / Volatility | Risk-adjusted return. Realistic values: 0.5-2.0 |
 | **Max Drawdown** | (Peak - Trough) / Peak | Maximum portfolio decline (lower=safer) |
 | **Win Rate** | Winning Trades / Total Trades | % of profitable trades |
 | **ROC AUC** | Area Under ROC Curve | Model discrimination ability (0.5=random, 1.0=perfect) |
+
+### Why Sharpe Ratios > 3 Are Suspicious
+
+A Sharpe ratio above 3 typically indicates one of the following issues:
+1. **Look-ahead bias**: Using future information to generate signals
+2. **Overfitting**: Model memorizing training data instead of learning patterns
+3. **Missing costs**: Not accounting for transaction costs, slippage, or borrowing costs
+4. **Survivorship bias**: Only testing on assets that survived the period
+5. **Incorrect annualization**: Using wrong formula for time-series data
+
+The dashboard now addresses issues #1, #3 by:
+- Only evaluating on out-of-sample data
+- Including configurable transaction costs
+- Subtracting the risk-free rate from returns
 
 ## 🔐 Important Disclaimers
 
 ⚠️ **BACKTEST LIMITATIONS**:
 - Past performance does not guarantee future results
-- Assumes perfect execution at daily close prices
-- Doesn't account for actual market microstructure
+- Assumes execution at bar close prices (may have slippage in practice)
+- Transaction costs are estimates; actual costs may vary
 - Sentiment data may have quality/coverage issues
-- Look-ahead bias possible if parameters not properly tuned
+- Model may still overfit even with proper validation
 
 ## 💡 Usage Tips
 
