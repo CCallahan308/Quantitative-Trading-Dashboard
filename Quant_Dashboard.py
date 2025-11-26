@@ -13,7 +13,7 @@ from sklearn.preprocessing import StandardScaler
 # Bayesian Optimization
 try:
     from skopt import gp_minimize, space
-    from skopt.utils import use_named_args
+    from skopt.utils import use_named_args   
     BAYESIAN_OPT_AVAILABLE = True
 except ImportError:
     BAYESIAN_OPT_AVAILABLE = False
@@ -198,24 +198,24 @@ def build_control_panel():
         html.Label("Starting Capital"),
         dcc.Input(id='input-capital', type='number', value=100000, className='input-field'),
         
-        html.Label("Long Signal Confidence (%)"),
-        dcc.Input(id='slider-min-confidence', type='number', value=75, min=50, max=100, step=1, className='input-field'),
-        html.Div("Enter integer percent (50-100). Converted to 0-1 internally.", className='input-hint'),
+    html.Label("Long Signal Confidence (%)"),
+    dcc.Input(id='slider-min-confidence', type='number', value=75, min=0, max=100, step=0.01, className='input-field'),
+    html.Div("Enter percent (0-100). Converted to 0-1 internally.", className='input-hint'),
         
-        html.Label("Short Signal Confidence (%)"),
-        dcc.Input(id='slider-max-confidence', type='number', value=25, min=0, max=50, step=1, className='input-field'),
-        html.Div("Enter integer percent (0-50). Converted to 0-1 internally.", className='input-hint'),
+    html.Label("Short Signal Confidence (%)"),
+    dcc.Input(id='slider-max-confidence', type='number', value=25, min=0, max=100, step=0.01, className='input-field'),
+    html.Div("Enter percent (0-100). Converted to 0-1 internally.", className='input-hint'),
         
-        html.Label("Stop-Loss Threshold (%)"),
-        dcc.Input(id='slider-loss-threshold', type='number', value=5, min=1, max=10, step=0.5, className='input-field'),
-        html.Div("Enter percent (1-10). Converted to 0-0.1 internally.", className='input-hint'),
+    html.Label("Stop-Loss Threshold (%)"),
+    dcc.Input(id='slider-loss-threshold', type='number', value=5, min=0.0, max=100.0, step=0.01, className='input-field'),
+    html.Div("Enter percent (1-10). Converted to 0-0.1 internally.", className='input-hint'),
         
-        html.Label("Trailing Stop Volatility Scale (%)"),
-        dcc.Input(id='slider-trail-vol-scale', type='number', value=5, min=0, max=20, step=0.5, className='input-field'),
-        html.Div("Enter percent (0-20). Converted to 0-0.2 internally.", className='input-hint'),
+    html.Label("Trailing Stop Volatility Scale (%)"),
+    dcc.Input(id='slider-trail-vol-scale', type='number', value=5, min=0.0, max=100.0, step=0.01, className='input-field'),
+    html.Div("Enter percent (0-20). Converted to 0-0.2 internally.", className='input-hint'),
         
-        html.Label("XGBoost Trees (n_estimators)"),
-        dcc.Input(id='input-n-estimators', type='number', value=500, min=50, max=2000, step=50, className='input-field'),
+    html.Label("XGBoost Trees (n_estimators)"),
+    dcc.Input(id='input-n-estimators', type='number', value=500, min=1, max=10000, step=1, className='input-field'),
 
         html.Label("Train Split (%)"),
         dcc.Input(id='slider-train-pct', type='number', value=65, min=50, max=90, step=1, className='input-field'),
@@ -236,10 +236,11 @@ def build_control_panel():
         html.H5('Bayesian Hyperparameter Optimization'),
         html.Label('Number of Optimization Iterations'),
         dcc.Input(id='bayes-n-calls', type='number', value=10, min=3, max=30, step=1, className='input-field'),
-        html.Div('Optimizes: min_confidence, max_confidence, loss_threshold, n_estimators', className='input-hint'),
-        html.Button('Start Bayesian Optimization', id='bayes-opt-button', n_clicks=0, className='run-button'),
-        html.Div(id='bayes-progress', style={'marginTop':'8px', 'fontWeight':'bold'}),
-        html.Div(id='bayes-results', style={'marginTop':'12px', 'padding':'8px', 'border':'1px solid #ccc', 'borderRadius':'4px', 'fontSize':'12px'}),
+    html.Div('Optimizes (in dashboard order): min_confidence %, max_confidence %, loss_threshold %, trail_vol_scale %, n_estimators, train %, val %, early_stopping', className='input-hint'),
+    html.Button('Start Bayesian Optimization', id='bayes-opt-button', n_clicks=0, className='run-button'),
+    html.Button('Apply Optimized Params', id='bayes-apply-button', n_clicks=0, className='run-button', disabled=True, style={'marginLeft':'8px'}),
+    html.Div(id='bayes-progress', style={'marginTop':'8px', 'fontWeight':'bold'}),
+    html.Div(id='bayes-results', style={'marginTop':'12px', 'padding':'8px', 'border':'1px solid #ccc', 'borderRadius':'4px', 'fontSize':'12px'}),
         
         html.Hr(),
         html.H5('Experiment Runner'),
@@ -263,6 +264,7 @@ def build_control_panel():
 # App Layout
 # =============================================================================
 app.layout = html.Div(id='main-container', style={'width': '100%', 'padding': '20px'}, children=[
+    dcc.Store(id='bayes-best-params'),
     html.H1(app.title),
     html.Div(style={'display': 'flex', 'gap': '30px', 'width': '100%'}, children=[
         build_control_panel(),
@@ -479,7 +481,17 @@ def compute_factor_attribution(data, returns_col='Returns'):
 def bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=15):
     """
     Use Bayesian optimization to find optimal strategy hyperparameters.
-    Optimizes: min_confidence, max_confidence, loss_threshold, n_estimators
+    Optimizes the parameters exposed in the dashboard (keeps the dashboard ordering and formats):
+        - min_confidence (percent, integer)
+        - max_confidence (percent, integer)
+        - loss_threshold (percent, float)
+        - trail_vol_scale (percent, float)
+        - n_estimators (int)
+        - train_pct (percent, int)
+        - val_pct (percent, int)
+        - early_stopping (int)
+
+    The optimizer works in dashboard order and converts percentages to decimals internally when evaluating.
     """
     if not BAYESIAN_OPT_AVAILABLE:
         print("Bayesian optimization not available. Install scikit-optimize: pip install scikit-optimize")
@@ -489,23 +501,49 @@ def bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=1
         from skopt import gp_minimize, space
         from skopt.utils import use_named_args
         
-        # Define search space
+        # Define search space (use dashboard-friendly ranges / percent units where appropriate)
         search_space = [
-            space.Real(0.60, 0.95, name='min_confidence'),      # Long signal confidence
-            space.Real(0.05, 0.40, name='max_confidence'),      # Short signal confidence  
-            space.Real(0.01, 0.10, name='loss_threshold'),      # Stop loss
-            space.Integer(100, 1000, name='n_estimators'),      # XGBoost trees
+            space.Integer(50, 95, name='min_confidence'),       # percent (50-95)
+            space.Integer(0, 50, name='max_confidence'),        # percent (0-50)
+            space.Real(1.0, 10.0, name='loss_threshold'),       # percent (1-10)
+            space.Real(0.0, 20.0, name='trail_vol_scale'),      # percent (0-20)
+            space.Integer(50, 2000, name='n_estimators'),       # XGBoost trees
+            space.Integer(50, 90, name='train_pct'),            # train percent (50-90)
+            space.Integer(1, 49, name='val_pct'),               # val percent (1-49)
+            space.Integer(0, 200, name='early_stopping'),       # early stopping rounds (0 disables)
         ]
+        # Combine train/test feature frames to allow full-sample prediction when needed
+        try:
+            X_all = pd.concat([X_train, X_test])
+        except Exception:
+            # Fallback: if concat fails, attempt to use X_train only
+            X_all = X_train.copy()
         
         # Objective function to minimize (negative Sharpe ratio)
         @use_named_args(search_space)
         def objective(**params):
             try:
-                min_conf = params['min_confidence']
-                max_conf = params['max_confidence']
-                loss_thresh = params['loss_threshold']
-                n_est = params['n_estimators']
-                
+                # Convert percent inputs from the optimizer into decimals where needed
+                min_conf_pct = float(params['min_confidence'])
+                max_conf_pct = float(params['max_confidence'])
+                loss_thresh_pct = float(params['loss_threshold'])
+                trail_vol_pct = float(params['trail_vol_scale'])
+                n_est = int(params['n_estimators'])
+                train_pct_opt = int(params['train_pct'])
+                val_pct_opt = int(params['val_pct'])
+                es_opt = int(params['early_stopping'])
+
+                # Validate train/val split: must be < 100
+                if train_pct_opt + val_pct_opt >= 100:
+                    # Bad configuration -> penalize
+                    return 1e6
+
+                # Convert to decimals used by the backtest
+                min_conf = min_conf_pct / 100.0
+                max_conf = max_conf_pct / 100.0
+                loss_thresh = loss_thresh_pct / 100.0
+                trail_vol = trail_vol_pct / 100.0
+
                 # Train model
                 model = xgb.XGBClassifier(
                     n_estimators=n_est,
@@ -518,22 +556,24 @@ def bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=1
                     eval_metric='logloss'
                 )
                 model.fit(X_train, y_train, verbose=0)
-                
-                # Generate signals
-                y_proba = model.predict_proba(X_test)[:, 1]
-                signals = np.where(y_proba > min_conf, 1, np.where(y_proba < max_conf, -1, 0))
-                
-                # Calculate returns
-                returns = data.loc[X_test.index, 'Returns'].values if 'Returns' in data.columns else y_test.values * 0.01
-                strategy_returns = returns * signals
-                
+
+                # Quick local backtest using the same risk-aware simulator
+                data_local = data.copy()
+                # Use X_all for full-sample probabilities
+                data_local['Confidence'] = pd.Series(model.predict_proba(X_all)[:, 1], index=X_all.index)
+                data_local['Signal'] = np.where(data_local['Confidence'] > min_conf, 1, np.where(data_local['Confidence'] < max_conf, -1, 0))
+                data_local['Signal'] = data_local['Signal'].shift(1)
+                data_local = simulate_risk_aware_backtest(data_local, loss_thresh, trail_vol)
+                data_local['Returns'] = data_local['PnL'] * data_local['PositionSize']
+                strategy_returns = data_local.loc[X_test.index, 'Returns'].values if 'Returns' in data_local.columns else np.zeros(len(X_test))
+
                 # Calculate Sharpe ratio
-                if len(strategy_returns) > 1:
+                if len(strategy_returns) > 1 and np.std(strategy_returns) > 0:
                     sharpe = np.mean(strategy_returns) / (np.std(strategy_returns) + 1e-8) * np.sqrt(252)
-                    # Return negative because we want to maximize
+                    # Return negative because gp_minimize minimizes
                     return -sharpe
                 else:
-                    return 0
+                    return 1e3
                     
             except Exception as e:
                 print(f"Error in objective function: {e}")
@@ -541,14 +581,20 @@ def bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=1
         
         # Run Bayesian optimization
         print(f"Starting Bayesian Optimization with {n_calls} iterations...")
-        result = gp_minimize(objective, search_space, n_calls=min(n_calls, 10), random_state=42, n_initial_points=3)
+        # Allow gp_minimize to run for the requested number of calls
+        result = gp_minimize(objective, search_space, n_calls=max(3, int(n_calls)), random_state=42, n_initial_points=min(5, max(1, int(n_calls/3))))
         
         # Extract best parameters
+        # Map result vector back to named params (in dashboard order)
         best_params = {
-            'min_confidence': result.x[0],
-            'max_confidence': result.x[1],
-            'loss_threshold': result.x[2],
-            'n_estimators': result.x[3],
+            'min_confidence': int(result.x[0]),
+            'max_confidence': int(result.x[1]),
+            'loss_threshold': float(result.x[2]),
+            'trail_vol_scale': float(result.x[3]),
+            'n_estimators': int(result.x[4]),
+            'train_pct': int(result.x[5]),
+            'val_pct': int(result.x[6]),
+            'early_stopping': int(result.x[7]),
             'best_score': -result.fun  # Negate back to get Sharpe ratio
         }
         
@@ -1383,7 +1429,83 @@ def poll_exp_progress(_):
 
 
 @app.callback(
-    [Output('bayes-progress', 'children'), Output('bayes-results', 'children')],
+    Output('bayes-apply-button', 'disabled'),
+    Input('bayes-best-params', 'data')
+)
+def enable_apply_button(best_params):
+    # Enable the Apply button when optimizer results are available
+    return False if best_params else True
+
+
+@app.callback(
+    [Output('slider-min-confidence', 'value'), Output('slider-max-confidence', 'value'), Output('slider-loss-threshold', 'value'), Output('slider-trail-vol-scale', 'value'), Output('input-n-estimators', 'value'), Output('slider-train-pct', 'value'), Output('slider-val-pct', 'value'), Output('input-early-stopping', 'value')],
+    Input('bayes-apply-button', 'n_clicks'),
+    State('bayes-best-params', 'data'),
+    prevent_initial_call=True
+)
+def apply_bayes_params(n_clicks, best_params):
+    # When user clicks Apply, write the stored optimizer values into the UI inputs
+    if not best_params:
+        # nothing to apply
+        return [dash.no_update] * 8
+
+    try:
+        # Quantize and coerce values to types the UI and validation expect:
+        # - confidences: round to 2 decimals (UI accepts percent floats)
+        # - thresholds/scales: round to 2 decimals
+        # - n_estimators, train/val pct, early_stopping: integers
+        min_conf = best_params.get('min_confidence', None)
+        max_conf = best_params.get('max_confidence', None)
+        loss_thr = best_params.get('loss_threshold', None)
+        trail_vol = best_params.get('trail_vol_scale', None)
+        n_est = best_params.get('n_estimators', None)
+        train_pct = best_params.get('train_pct', None)
+        val_pct = best_params.get('val_pct', None)
+        es = best_params.get('early_stopping', None)
+
+        # Rounding / coercion rules
+        if min_conf is not None:
+            min_conf = round(float(min_conf), 2)
+        if max_conf is not None:
+            max_conf = round(float(max_conf), 2)
+        if loss_thr is not None:
+            loss_thr = round(float(loss_thr), 2)
+        if trail_vol is not None:
+            trail_vol = round(float(trail_vol), 2)
+        if n_est is not None:
+            try:
+                n_est = int(round(float(n_est)))
+            except Exception:
+                n_est = int(n_est)
+        if train_pct is not None:
+            train_pct = int(round(float(train_pct)))
+        if val_pct is not None:
+            val_pct = int(round(float(val_pct)))
+        if es is not None:
+            es = int(round(float(es)))
+
+        # Ensure train + val < 100 (adjust val_pct if needed)
+        if train_pct is not None and val_pct is not None:
+            if train_pct + val_pct >= 100:
+                # reduce val_pct to keep sum < 100, keep at least 1
+                val_pct = max(1, 99 - train_pct)
+
+        return [
+            min_conf if min_conf is not None else dash.no_update,
+            max_conf if max_conf is not None else dash.no_update,
+            loss_thr if loss_thr is not None else dash.no_update,
+            trail_vol if trail_vol is not None else dash.no_update,
+            n_est if n_est is not None else dash.no_update,
+            train_pct if train_pct is not None else dash.no_update,
+            val_pct if val_pct is not None else dash.no_update,
+            es if es is not None else dash.no_update
+        ]
+    except Exception:
+        return [dash.no_update] * 8
+
+
+@app.callback(
+    [Output('bayes-progress', 'children'), Output('bayes-results', 'children'), Output('bayes-best-params', 'data')],
     Input('bayes-opt-button', 'n_clicks'),
     [State('input-symbol', 'value'),
      State('input-start-date', 'value'),
@@ -1395,7 +1517,7 @@ def poll_exp_progress(_):
 )
 def run_bayesian_optimization(n_clicks, symbol, start_date, end_date, interval, train_pct, val_pct, n_calls):
     if not n_clicks or not BAYESIAN_OPT_AVAILABLE:
-        return '', ''
+        return '', '', None
     
     try:
         # Fetch data
@@ -1433,28 +1555,34 @@ def run_bayesian_optimization(n_clicks, symbol, start_date, end_date, interval, 
         
         # Run Bayesian optimization
         best_params = bayesian_optimize_strategy(data, X_train, y_train, X_test, y_test, n_calls=n_calls)
-        
+
         if best_params:
+            # Format results in the same style/order as the dashboard (percent values where the UI displays %)
             results_text = f"""
 ✓ Bayesian Optimization Complete!
 
-Best Parameters Found:
-  • Min Confidence: {best_params['min_confidence']:.3f}
-  • Max Confidence: {best_params['max_confidence']:.3f}
-  • Loss Threshold: {best_params['loss_threshold']:.4f}
+Best Parameters Found (dashboard order):
+  • Min Confidence: {best_params['min_confidence']} %
+  • Max Confidence: {best_params['max_confidence']} %
+  • Loss Threshold: {best_params['loss_threshold']:.2f} %
+  • Trailing Vol Scale: {best_params['trail_vol_scale']:.2f} %
   • XGBoost Trees: {int(best_params['n_estimators'])}
+  • Train Split: {best_params['train_pct']} %
+  • Validation Split: {best_params['val_pct']} %
+  • Early Stopping Rounds: {best_params['early_stopping']}
   
 Expected Sharpe Ratio: {best_params['best_score']:.3f}
 
-Tip: Copy these values to the main backtest parameters above!
+Tip: Copy these values into the main backtest controls (they are formatted the same way the dashboard expects).
             """
-            return '✓ Optimization Complete', results_text
+            # return results plus the params (store them so the Apply button can use them)
+            return '✓ Optimization Complete', results_text, best_params
         else:
-            return '✗ Optimization Failed', 'Check console for errors. Is scikit-optimize installed?'
+            return '✗ Optimization Failed', 'Check console for errors. Is scikit-optimize installed?', None
             
     except Exception as e:
         print(f"Error in Bayesian optimization: {e}")
-        return f'✗ Error: {str(e)}', ''
+        return f'✗ Error: {str(e)}', '', None
 
 
 if __name__ == '__main__':
