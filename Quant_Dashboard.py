@@ -857,27 +857,74 @@ def run_backtest(n_clicks, symbol, start_date, end_date, interval, capital, min_
             fpr = tpr = []
             roc_auc = None
 
-        # IMPORTANT: Only use out-of-sample predictions to avoid look-ahead bias
-        # Generate predictions separately for train, test, and validation sets
-        # Train set uses in-sample predictions (for visualization only, not trading)
-        # Test + Val sets use out-of-sample predictions (realistic for backtesting)
+        # IMPORTANT: Walk-forward validation for continuous signals across entire period
+        # Train on expanding window, predict on next batch (realistic out-of-sample predictions)
         
         y_proba_all = np.zeros(len(X))
+        walk_forward_window = max(100, train_size // 2)  # Train on expanding window, step by 10%
+        step_size = max(1, len(X) // 20)  # Step forward by ~5% of data at a time
         
-        # For training data: mark as NaN (no trading on in-sample data)
-        y_proba_all[:train_size] = np.nan
+        print(f"Walk-forward validation: window={walk_forward_window}, step={step_size}, total_samples={len(X)}")
         
-        # For test data: use out-of-sample predictions from model trained on train data
-        y_proba_all[train_size:train_size+test_size] = model_xgb.predict_proba(X_test)[:, 1]
+        # Initial training period (no signals yet - bootstrapping)
+        y_proba_all[:walk_forward_window] = np.nan
         
-        # For validation data: use out-of-sample predictions
-        if len(X_val) > 0:
-            y_proba_all[train_size+test_size:] = model_xgb.predict_proba(X_val)[:, 1]
+        # Walk-forward loop
+        for start_idx in range(walk_forward_window, len(X) - step_size, step_size):
+            end_idx = min(start_idx + step_size, len(X))
+            
+            # Train on data up to start_idx
+            X_wf_train = X[:start_idx]
+            y_wf_train = y[:start_idx]
+            
+            # Predict on next batch
+            X_wf_pred = X[start_idx:end_idx]
+            
+            try:
+                # Train model on accumulated data
+                wf_model = xgb.XGBClassifier(
+                    n_estimators=n_estimators_val,
+                    learning_rate=0.05,
+                    max_depth=7,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    gamma=0.5,
+                    min_child_weight=1,
+                    random_state=42,
+                    eval_metric='logloss'
+                )
+                wf_model.fit(X_wf_train, y_wf_train, verbose=0)
+                
+                # Generate out-of-sample predictions
+                y_proba_all[start_idx:end_idx] = wf_model.predict_proba(X_wf_pred)[:, 1]
+            except Exception as e:
+                print(f"Walk-forward error at idx {start_idx}: {e}")
+                y_proba_all[start_idx:end_idx] = np.nan
+        
+        # Handle any remaining data at the end
+        if end_idx < len(X):
+            try:
+                wf_model = xgb.XGBClassifier(
+                    n_estimators=n_estimators_val,
+                    learning_rate=0.05,
+                    max_depth=7,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    gamma=0.5,
+                    min_child_weight=1,
+                    random_state=42,
+                    eval_metric='logloss'
+                )
+                wf_model.fit(X[:end_idx], y[:end_idx], verbose=0)
+                X_wf_final = X[end_idx:]
+                y_proba_all[end_idx:] = wf_model.predict_proba(X_wf_final)[:, 1]
+            except Exception as e:
+                print(f"Final walk-forward error: {e}")
         
         data['Confidence'] = pd.Series(y_proba_all, index=data.index)
         data['Signal'] = np.where(data['Confidence'] > min_confidence, 1, 
                                   np.where(data['Confidence'] < max_confidence, -1, 0))
-        # Don't generate signals for training period (where confidence is NaN)
+        # Don't generate signals during initial bootstrap period (where confidence is NaN)
         data.loc[data['Confidence'].isna(), 'Signal'] = 0
         data['Signal'] = data['Signal'].shift(1)
 
@@ -940,8 +987,9 @@ Trade Count:               {(data['PnL'] != 0).sum()}
 Transaction Costs Paid:    ${total_txn_costs:,.2f}
 Avg Position Size:         {data[data['PnL'] != 0]['PositionSize'].mean():.2%}
 ============================================================
-⚠️  NOTE: Sharpe calculated on OUT-OF-SAMPLE data only
-    (Test + Validation periods, not training period)
+⚠️  NOTE: Walk-forward validation used
+    Continuously trained on expanding historical window
+    Ensures all predictions are truly out-of-sample
 ============================================================
 """
         latest = data.iloc[-1]
