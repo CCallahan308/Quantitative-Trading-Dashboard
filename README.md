@@ -70,6 +70,9 @@ Experience a professional, dark-mode interface designed for quantitative analyst
 - **Production Metrics**: Sharpe ratio, max drawdown, win rate, and ROC AUC
 - **Risk Metrics**: Daily volatility, trailing stop analysis, and loss threshold triggering
 
+g## 🏗️ System Architecture
+
+```mermaid
 graph TD
     %% Styling
     classDef database fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
@@ -121,8 +124,6 @@ graph TD
     Risk --> Metrics
     Metrics --> Dash
     Plots & Controls --- Dash
-    ```mermaid
-
 ## 📊 Dashboard UI
 
 The dashboard features a professional, dark-mode design inspired by enterprise trading platforms. See the [Dashboard UI Showcase](#-dashboard-ui-showcase) above for actual screenshots.
