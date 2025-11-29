@@ -70,6 +70,59 @@ Experience a professional, dark-mode interface designed for quantitative analyst
 - **Production Metrics**: Sharpe ratio, max drawdown, win rate, and ROC AUC
 - **Risk Metrics**: Daily volatility, trailing stop analysis, and loss threshold triggering
 
+graph TD
+    %% Styling
+    classDef database fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef process fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef ml fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef ui fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    %% Nodes
+    subgraph Data_Layer ["Data Ingestion Layer"]
+        API[("yfinance API<br/>(Daily & Intraday)")]:::database
+        News[("News/Sentiment API")]:::database
+    end
+
+    subgraph Feature_Eng ["Feature Engineering"]
+        Raw[Raw OHLCV Data]:::process
+        Tech[Technical Indicators<br/>(RSI, MACD, BB, ATR)]:::process
+        Sent[Sentiment Scoring]:::process
+        Clean[Data Cleaning<br/>(Walk-Forward Split)]:::process
+    end
+
+    subgraph ML_Core ["ML Strategy Core"]
+        XGB[XGBoost Classifier<br/>(Binary: Up/Down)]:::ml
+        Opt[Hyperparameter Tuning<br/>(Grid/Random Search)]:::ml
+        Valid[Validation Logic<br/>(Early Stopping)]:::ml
+    end
+
+    subgraph Backtest ["Backtest Engine"]
+        Sim[Simulation Loop]:::process
+        Risk[Risk Management<br/>(Slippage, Comm, Stops)]:::process
+        Metrics[Performance Metrics<br/>(Sharpe, Drawdown, ROC)]:::process
+    end
+
+    subgraph Frontend ["User Interface (Dash)"]
+        Dash[Interactive Dashboard]:::ui
+        Plots[Plotly Visualizations]:::ui
+        Controls[Param Controls]:::ui
+    end
+
+    %% Connections
+    API --> Raw
+    News --> Sent
+    Raw --> Tech
+    Tech & Sent --> Clean
+    Clean --> XGB
+    Opt -.-> XGB
+    XGB --> Valid
+    Valid --> Sim
+    Sim --> Risk
+    Risk --> Metrics
+    Metrics --> Dash
+    Plots & Controls --- Dash
+    ```mermaid
+
 ## 📊 Dashboard UI
 
 The dashboard features a professional, dark-mode design inspired by enterprise trading platforms. See the [Dashboard UI Showcase](#-dashboard-ui-showcase) above for actual screenshots.
