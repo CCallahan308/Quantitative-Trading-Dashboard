@@ -1,0 +1,775 @@
+/* =============================================================================
+   TWO SIGMA INSPIRED QUANTITATIVE TRADING DASHBOARD
+   Minimalist, Institutional, Premium Design
+   ============================================================================= */
+
+:root {
+  /* Two Sigma Color Palette - Clean & Professional */
+  --primary-bg: #0f1419;
+  --secondary-bg: #1a1f2e;
+  --tertiary-bg: #242b3a;
+  --accent-primary: #00a86b;
+  --accent-secondary: #4a90e2;
+  --accent-red: #e74c3c;
+  --text-primary: #e8eaed;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --border-light: #2d3748;
+  --border-med: #374151;
+  --input-bg: #1a1f2e;
+  --hover-bg: #2d3748;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #e74c3c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background-color: var(--primary-bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+}
+
+/* =============================================================================
+   MAIN CONTAINER & LAYOUT
+   ============================================================================= */
+
+#main-container {
+  background: var(--primary-bg);
+  min-height: 100vh;
+  padding: 48px 60px !important;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#main-container h1 {
+  font-size: 38px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  margin-bottom: 50px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 24px;
+}
+
+/* =============================================================================
+   CONTROL PANEL STYLING
+   ============================================================================= */
+
+#control-panel {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 32px;
+  width: 340px !important;
+  min-width: 340px;
+  height: fit-content;
+  position: sticky;
+  top: 48px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+  flex-shrink: 0;
+}
+
+#control-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+#control-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#control-panel::-webkit-scrollbar-thumb {
+  background: var(--border-med);
+  border-radius: 3px;
+}
+
+#control-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+#control-panel h4 {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#control-panel h5 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 28px;
+  margin-bottom: 18px;
+  color: var(--text-primary);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+#control-panel label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+#control-panel label:hover {
+  color: var(--text-primary);
+}
+
+#control-panel hr {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 28px 0;
+}
+
+/* =============================================================================
+   INPUT FIELDS & FORM ELEMENTS
+   ============================================================================= */
+
+.input-field {
+  width: 100%;
+  padding: 12px 14px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  transition: all 0.25s ease;
+  margin-bottom: 14px;
+}
+
+.input-field:hover {
+  border-color: var(--border-med);
+  background-color: var(--tertiary-bg);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
+  background-color: var(--input-bg);
+}
+
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Native HTML Date Inputs */
+input[type='date'] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  padding: 12px 14px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+input[type='date']:hover {
+  border-color: var(--border-med);
+  background-color: var(--tertiary-bg);
+}
+
+input[type='date']:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
+  background-color: var(--input-bg);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.8) brightness(1.1);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(1) brightness(1.3);
+}
+
+#control-panel .date-range-wrapper {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* =============================================================================
+   SLIDER STYLING
+   ============================================================================= */
+
+.rc-slider {
+  margin: 18px 0 32px 0;
+}
+
+.rc-slider-track {
+  background: var(--accent-primary);
+  height: 3px;
+  border-radius: 2px;
+}
+
+.rc-slider-rail {
+  background-color: var(--border-light);
+  height: 3px;
+  border-radius: 2px;
+}
+
+.rc-slider-handle {
+  width: 14px;
+  height: 14px;
+  background: var(--accent-primary);
+  border: 2px solid var(--secondary-bg);
+  border-radius: 50%;
+  /* center the handle precisely regardless of border size */
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin-left: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 168, 107, 0.2);
+}
+
+.rc-slider-handle:hover {
+  box-shadow: 0 2px 10px rgba(0, 168, 107, 0.4);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.rc-slider-mark-text {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+/* =============================================================================
+   BUTTONS & ACTIONS
+   ============================================================================= */
+
+.run-button {
+  width: 100%;
+  padding: 13px 18px;
+  margin-top: 24px;
+  background: var(--accent-primary);
+  color: var(--primary-bg);
+  border: none;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 168, 107, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.run-button:hover {
+  background: #00945f;
+  box-shadow: 0 4px 12px rgba(0, 168, 107, 0.3);
+  transform: translateY(-2px);
+}
+
+.run-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 168, 107, 0.2);
+}
+
+.run-button:disabled {
+  background: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.app-content {
+  display: flex;
+  gap: 40px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 20px;
+}
+
+#results-output {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 1200px;
+  width: 100%;
+}
+
+/* =============================================================================
+   RESULTS & SECTIONS
+   ============================================================================= */
+
+.results-section {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
+}
+
+.results-section:hover {
+  border-color: var(--border-med);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.section-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  color: var(--accent-primary);
+}
+
+.section-header .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* =============================================================================
+   METRICS GRID
+   ============================================================================= */
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.25s ease;
+}
+
+.metric-card:hover {
+  border-color: var(--accent-primary);
+  background: rgba(0, 168, 107, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 168, 107, 0.1);
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  font-family: 'SF Mono', 'Monaco', monospace;
+  letter-spacing: 0.5px;
+}
+
+.metric-value.positive {
+  color: var(--success);
+}
+
+.metric-value.negative {
+  color: var(--danger);
+}
+
+.metric-value.neutral {
+  color: var(--accent-secondary);
+}
+
+.metric-change {
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--text-secondary);
+}
+
+/* =============================================================================
+   CHARTS & VISUALIZATIONS
+   ============================================================================= */
+
+.chart-container {
+  background-color: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 400px;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-primary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* =============================================================================
+   TABLES & DATA DISPLAY
+   ============================================================================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table th {
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-light);
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-primary);
+}
+
+table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Monaco', monospace;
+}
+
+table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =============================================================================
+   SUMMARY OUTPUT
+   ============================================================================= */
+
+.summary-container {
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 24px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  font-family: 'SF Mono', 'Monaco', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 600px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.summary-label {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.summary-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.summary-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.summary-warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* =============================================================================
+   LOADING & STATUS
+   ============================================================================= */
+
+#loading-spinner {
+  width: 100%;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-light);
+  border-radius: 50%;
+  border-top-color: var(--accent-primary);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-message {
+  padding: 12px 16px;
+  background-color: var(--tertiary-bg);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.status-message.warning {
+  border-left-color: var(--warning);
+  color: var(--warning);
+}
+
+.status-message.error {
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+/* =============================================================================
+   SCROLLBAR STYLING
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--primary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-med);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-primary);
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+@media (max-width: 1600px) {
+  #control-panel {
+    width: 340px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  #main-container {
+    padding: 32px 40px !important;
+  }
+  
+  #control-panel {
+    width: 320px !important;
+    position: static;
+    max-height: none;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  #main-container {
+    padding: 20px !important;
+  }
+  
+  #main-container h1 {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+  
+  #control-panel {
+    width: 100% !important;
+    margin-bottom: 20px;
+    position: static;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  table th, table td {
+    padding: 8px;
+  }
+  
+  .app-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+/* =============================================================================
+   PLOTLY OVERRIDES
+   ============================================================================= */
+
+.plotly-graph-div {
+  background-color: transparent !important;
+}
+
+.plotly .xaxislayer-above .xtick text {
+  color: var(--text-secondary) !important;
+  font-size: 11px !important;
+}
+
+.plotly .yaxislayer-above .ytick text {
+  color: var(--text-secondary) !important;
+  font-size: 11px !important;
+}
+
+.plotly text {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  color: var(--text-secondary) !important;
+}
+
+.hovertext {
+  font-family: 'SF Mono', 'Monaco', monospace !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* =============================================================================
+   DASH / react-select (dcc.Dropdown) OVERRIDES
+   These rules improve contrast for dropdown controls and option lists so items
+   are readable on the app's dark theme. We include several selector names to
+   catch different react-select / Dash versions and generated classnames.
+   ============================================================================= */
+
+/* Control (closed dropdown) */
+.react-select__control,
+.css-1s2u09g-control,
+.Select__control,
+.Select-control,
+.input-field.react-select__control {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dropdown menu (floating list) */
+.react-select__menu,
+.Select-menu-outer,
+.Select__menu,
+[role="listbox"] {
+  background: var(--secondary-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-light) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Individual options */
+.react-select__option,
+.Select-option,
+.rc-Select-option,
+[role="option"] {
+  color: var(--text-primary) !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+}
+
+/* Disabled/unselectable options — slightly muted but readable */
+.react-select__option--is-disabled,
+.Select-option.is-disabled,
+[role="option"][aria-disabled="true"] {
+  color: var(--text-tertiary) !important;
+  opacity: 0.95 !important;
+}
+
+/* Focus / hover / keyboard navigation */
+.react-select__option--is-focused,
+.Select-option.is-focused,
+.Select-option:hover,
+[role="option"]:hover {
+  background: rgba(74, 144, 226, 0.10) !important; /* subtle blue */
+  color: var(--text-primary) !important;
+}
+
+/* Selected option */
+.react-select__option--is-selected,
+.Select-option.is-selected,
+[role="option"][aria-selected="true"] {
+  background: rgba(0, 168, 107, 0.10) !important; /* subtle green */
+  color: var(--text-primary) !important;
+}
+
+/* When react-select injects inline styles on the menu, enforce readable link/text color
+   for any nested elements (icons/labels) */
+.react-select__menu *,
+.Select-menu-outer *,
+[role="listbox"] * {
+  color: inherit !important;
+}
+
