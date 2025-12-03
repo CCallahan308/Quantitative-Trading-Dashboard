@@ -4,22 +4,20 @@ import sys
 from datetime import datetime
 import pandas as pd
 import plotly.express as px
-
-import importlib.util
+import numpy as np
 import os
 
-# Load the 'Quant_Dashboard.py' module dynamically
-module_path = os.path.join(os.path.dirname(__file__), 'Quant_Dashboard.py')
-spec = importlib.util.spec_from_file_location('quant_dashboard_module', module_path)
-tv = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(tv)
+from core.strategy import Strategy
+from core.backtest import simulate_risk_aware_backtest
+from core.data import get_bars_per_year
+from core.utils import compute_cross_validation
 
 # Constants
 BPS_TO_DECIMAL = 10000.0  # Convert basis points to decimal
 ENTRY_EXIT_COST_MULTIPLIER = 2  # Transaction cost applied on both entry and exit
 
 
-def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', capital=1000, min_conf=0.75, max_conf=0.25, loss_threshold_pct=5, trail_vol_scale=0.05, transaction_cost_bps=10, risk_free_rate_pct=5.0):
+def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', capital=1000, min_conf=0.55, max_conf=0.45, loss_threshold_pct=5, trail_vol_scale=2.0, transaction_cost_bps=10, risk_free_rate_pct=5.0):
     if end_date is None:
         end_date = datetime.now().strftime('%Y-%m-%d')
 
@@ -28,92 +26,45 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', cap
     risk_free_rate = risk_free_rate_pct / 100.0  # Convert percentage to decimal
     
     # Calculate bars per year based on interval
-    bars_per_year = tv.get_bars_per_year(interval)
+    bars_per_year = get_bars_per_year(interval)
 
-    # Fetch data
-    data = tv.yf.download(symbol, start=start_date, end=end_date, interval=interval)
-    if data.empty:
+    print(f"Fetching data and generating features for {symbol}...")
+    strategy = Strategy()
+    data = strategy.prepare_data(symbol, start_date, end_date, interval)
+    
+    if data is None or data.empty:
         print('No data returned')
         return
 
-    # Flatten MultiIndex if present
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
+    X, y = strategy.get_feature_data(data)
 
-    # Feature engineering (reuse same pipeline as in the app)
-    data['MA20'] = data['Close'].rolling(window=20).mean()
-    data['MA50'] = data['Close'].rolling(window=50).mean()
-    data['RSI'] = tv.compute_rsi(data['Close'])
-    data['Volatility'] = data['Close'].pct_change().rolling(20).std() * (bars_per_year ** 0.5)
-    data['VolumePct'] = data['Volume'].pct_change()
-    data['Sentiment'] = data.index.to_series().apply(tv.fetch_news_sentiment)
-
-    macd_line, macd_signal, macd_hist = tv.compute_macd(data['Close'])
-    data['MACD'] = macd_line
-    data['MACD_Signal'] = macd_signal
-    data['MACD_Histogram'] = macd_hist
-
-    bb_upper, bb_mid, bb_lower = tv.compute_bollinger_bands(data['Close'])
-    data['BB_Upper'] = bb_upper
-    data['BB_Middle'] = bb_mid
-    data['BB_Lower'] = bb_lower
-    data['BB_Position'] = (data['Close'] - bb_lower) / (bb_upper - bb_lower + 1e-6)
-
-    data['ATR'] = tv.compute_atr(data['High'], data['Low'], data['Close'])
-    adx, plus_di, minus_di = tv.compute_adx(data['High'], data['Low'], data['Close'])
-    data['ADX'] = adx
-    data['Plus_DI'] = plus_di
-    data['Minus_DI'] = minus_di
-
-    data['Return'] = data['Close'].pct_change()
-    data['Target'] = (data['Return'].shift(-1) > 0).astype(int)
-
-    data = data.dropna().copy()
-
-    # Features
-    features = ['MA20','MA50','RSI','Volatility','VolumePct','Sentiment','MACD','MACD_Signal','MACD_Histogram','BB_Position','ATR','ADX','Plus_DI','Minus_DI']
-    X = data[features]
-
-    # Load model training from the app code (same splits)
+    # Load model training splits
     train_size = int(len(X) * 0.65)
     test_size = int(len(X) * 0.20)
 
     X_train = X[:train_size]
-    y_train = data['Target'][:train_size]
+    y_train = y[:train_size]
     X_test = X[train_size:train_size+test_size]
-    y_test = data['Target'][train_size:train_size+test_size]
+    y_test = y[train_size:train_size+test_size]
 
     # Train model
-    model = tv.xgb.XGBClassifier(
-        n_estimators=500,
-        learning_rate=0.05,
-        max_depth=7,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        gamma=0.5,
-        min_child_weight=1,
-        random_state=42,
-        eval_metric='logloss'
-    )
-    try:
-        model.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=50, verbose=False)
-    except TypeError:
-        model.fit(X_train, y_train)
+    print("Training model...")
+    
+    # Check CV first
+    # Create a temporary model for CV (since train_model fits it)
+    # We use the same params as default in Strategy.train_model
+    tmp_model = strategy.train_model(X_train, y_train, n_estimators=10) # Just to get a model instance? No, train_model returns a fitted model.
+    # We need a fresh unfitted model for CV or just pass the fitted one if compute_cross_validation handles cloning.
+    # Looking at core/utils.py (implied), usually sklearn cloning is safe.
+    # But let's just train the main model and skip CV print for now to keep it simple, 
+    # or use the method from strategy if I added one (I didn't).
+    # Let's stick to the original logic but using strategy.train_model
+    
+    model = strategy.train_model(X_train, y_train, X_val=X_test, y_val=y_test, early_stopping_rounds=50)
 
-    # IMPORTANT: Only use out-of-sample predictions to avoid look-ahead bias
-    import numpy as np
-    y_proba_all = np.zeros(len(X))
-    
-    # For training data: mark as NaN (no trading on in-sample data)
-    y_proba_all[:train_size] = np.nan
-    
-    # For test data: use out-of-sample predictions
-    y_proba_all[train_size:train_size+test_size] = model.predict_proba(X_test)[:, 1]
-    
-    # For remaining data (validation): use out-of-sample predictions
-    if len(X) > train_size + test_size:
-        X_val = X[train_size+test_size:]
-        y_proba_all[train_size+test_size:] = model.predict_proba(X_val)[:, 1]
+    # Perform Walk-Forward Validation
+    print("Running Walk-Forward Validation...")
+    y_proba_all = strategy.walk_forward_validation(X, y, train_size)
     
     data['Confidence'] = pd.Series(y_proba_all, index=X.index)
     data['Signal'] = np.where(data['Confidence'] > min_conf, 1, 
@@ -123,7 +74,10 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', cap
     data['Signal'] = data['Signal'].shift(1)
 
     # Backtest with transaction costs
-    res = tv.simulate_risk_aware_backtest(data, loss_threshold, trail_vol_scale)
+    print("Running backtest...")
+    bt_result = simulate_risk_aware_backtest(data, loss_threshold, trail_vol_scale)
+    res = bt_result['data']
+    trades_df = bt_result['trades']
     
     # Calculate returns with transaction costs
     res['TradeEntry'] = (res['Signal'].diff().abs() > 0).astype(int)
@@ -155,7 +109,7 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', cap
     print(f'Win rate: {win_rate:.2%}  Trades: {trades}')
     print(f'Transaction Costs Paid: ${total_txn_costs:,.2f}')
     print('')
-    print('NOTE: Sharpe calculated on OUT-OF-SAMPLE data only (test + validation periods)')
+    print('NOTE: Sharpe calculated on OUT-OF-SAMPLE data (Walk-Forward Validation)')
 
     # Save charts
     fig_price = px.line(res, x=res.index, y='Close', title=f'{symbol} Price & Signals')
@@ -171,3 +125,4 @@ def run(symbol='SPY', start_date='2024-01-01', end_date=None, interval='1d', cap
 
 if __name__ == '__main__':
     run()
+

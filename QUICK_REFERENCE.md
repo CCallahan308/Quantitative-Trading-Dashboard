@@ -195,7 +195,7 @@ A: n_estimators too high. Reduce to 100-200 for faster testing.
 A: Not yet. Would need: real-time data feed, order execution API, risk controls.
 
 **Q: What's the best Sharpe ratio?**
-A: Anything above 2.0 is excellent. Above 1.0 is good. Jane Street averages ~2-3.
+A: Anything above 2.0 is excellent. Above 1.0 is good. Professional traders typically target 2-3.
 
 **Q: How do I save my settings?**
 A: All runs are saved to `runs/` directory automatically.

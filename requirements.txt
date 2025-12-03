@@ -3,13 +3,18 @@ plotly==5.24.1
 pandas>=2.0.0
 numpy>=1.26.0
 yfinance>=0.2.48
+finnhub-python>=2.4.0
+python-dotenv
 pandas-datareader>=0.10.0
 xgboost>=2.0.0
 scikit-learn>=1.3.0
+scikit-optimize>=0.9.0
 joblib==1.4.2
 textblob==0.18.0
 python-dateutil==2.9.0
 requests>=2.31.0
+numba>=0.59.0
 
-# Note: yfinance may experience intermittent API issues with Yahoo Finance.
-# The dashboard includes retry logic and fallback methods to handle this.
+# Note: Finnhub is the primary data source (requires API key).
+# yfinance is used as fallback if Finnhub fails or API key is not set.
+# Set FINNHUB_API_KEY environment variable or update core/data.py directly.
