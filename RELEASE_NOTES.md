@@ -68,13 +68,15 @@ This is the initial v2.0 release of the Quantitative Trading Strategy Dashboard,
 
 ### 📊 Example Performance
 
-**SPY (Jan 2024 - Dec 2025)** - Using optimized default parameters:
+**SPY (Jan 2020 - Dec 2024)** - Using optimized default parameters (Backtest Results):
 - Final Value: $1,082.62
 - Total Return: +8.26%
 - Annualized Return: +4.73%
 - Sharpe Ratio: -0.08 (Risk-Free Rate: 5.00%)
 - Win Rate: 49.16%
 - Trades: 238
+
+> **Note**: These are historical backtest results using out-of-sample data. Past performance is not indicative of future results. The Sharpe ratio reflects the high risk-free rate assumption (5%) relative to the strategy's returns during the test period.
 
 ### 🔧 Technical Details
 
